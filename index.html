@@ -5,128 +5,359 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Control de Asistencia Secundaria</title>
   <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { margin: 0; padding: 12px; background: #f0f2f5; color: #1c1e21; text-align: center; }
-    .container { max-width: 460px; margin: auto; background: white; padding: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    h2 { margin: 0 0 12px 0; color: #0d6efd; font-size: 20px; }
+    :root {
+      --primary: #1e40af;
+      --primary-light: #3b82f6;
+      --success: #10b981;
+      --success-dark: #059669;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #0f172a;
+      --gray-bg: #f1f5f9;
+    }
 
-    /* Selector de los 3 Grupos (3.-C, 3.-D, 3.-E) */
-    .group-label { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .group-selector { display: flex; gap: 8px; margin-bottom: 14px; }
-    .group-btn { flex: 1; padding: 14px 0; font-size: 18px; font-weight: 800; border: 2px solid #0d6efd; background: white; color: #0d6efd; border-radius: 12px; cursor: pointer; transition: 0.15s; }
-    .group-btn.active { background: #0d6efd; color: white; box-shadow: 0 3px 8px rgba(13,110,253,0.3); }
+    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { margin: 0; padding: 12px; background: var(--gray-bg); color: var(--dark); text-align: center; }
 
-    /* Barra de Fecha del Día */
-    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #e9ecef; padding: 8px 12px; border-radius: 10px; margin-bottom: 14px; font-size: 14px; font-weight: bold; }
-    .date-bar input[type="date"] { border: 1px solid #ced4da; border-radius: 6px; padding: 6px 8px; font-size: 14px; font-weight: bold; background: white; color: #212529; }
+    .app-card {
+      max-width: 480px;
+      margin: auto;
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+      overflow: hidden;
+    }
 
-    /* Pestañas de navegación */
-    .tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-    .tab-btn { flex: 1; padding: 9px; border: none; background: #e4e6eb; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; color: #4b4f56; }
-    .tab-btn.active { background: #198754; color: white; }
+    /* Encabezado moderno */
+    .header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: white;
+      padding: 18px 16px;
+    }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.3px; }
+    .header p { margin: 4px 0 0 0; font-size: 12px; opacity: 0.85; }
+
+    .content { padding: 16px; }
+
+    /* Botones de Grupos (3.-C, 3.-D, 3.-E) */
+    .section-title { font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .group-selector { display: flex; gap: 10px; margin-bottom: 14px; }
+    .group-btn {
+      flex: 1;
+      padding: 12px 6px;
+      font-size: 18px;
+      font-weight: 900;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .group-btn.active {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      border-color: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    /* Barra de Fecha */
+    .date-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .date-bar input[type="date"] {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      background: white;
+    }
+
+    /* Pestañas */
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 9px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      color: #64748b;
+      transition: 0.2s;
+    }
+    .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 
     .section { display: none; }
     .section.active { display: block; }
 
-    .big-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; margin: 6px 0; color: white; }
-    .btn-green { background: #198754; }
-    .btn-blue { background: #0d6efd; }
-    .btn-red { background: #dc3545; font-size: 13px; padding: 10px; }
+    /* Botón de Prender / Apagar Escáner */
+    .scanner-toggle-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 800;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: 0.2s;
+      margin-bottom: 10px;
+    }
+    .scanner-off {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .scanner-on {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
 
-    input[type="text"], textarea { width: 100%; padding: 12px; font-size: 15px; border: 2px solid #ced4da; border-radius: 10px; margin-bottom: 10px; }
-    
-    #statusBox { margin: 10px 0; padding: 15px; border-radius: 12px; background: #f8f9fa; border: 2px dashed #adb5bd; font-size: 16px; font-weight: bold; min-height: 75px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    .status-ok { background: #d1e7dd !important; border-color: #198754 !important; color: #0f5132; }
-    .status-warn { background: #fff3cd !important; border-color: #ffc107 !important; color: #664d03; }
+    /* Monitor de Estado NFC */
+    #statusBox {
+      margin-bottom: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      min-height: 74px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: 0.2s;
+    }
+    .box-locked { background: #f8fafc; border: 2px dashed #cbd5e1; color: #64748b; }
+    .box-listening { background: #eff6ff; border: 2px solid #60a5fa; color: #1e40af; animation: pulseBorder 1.8s infinite; }
+    .box-ok { background: #dcfce7; border: 2px solid #22c55e; color: #166534; }
+    .box-warn { background: #fef3c7; border: 2px solid #f59e0b; color: #92400e; }
 
-    /* Lista alfabética de alumnos */
-    .roster-box { text-align: left; max-height: 290px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 10px; margin-top: 8px; }
-    .student-row { padding: 11px 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 14px; cursor: pointer; user-select: none; }
+    @keyframes pulseBorder {
+      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
+    /* Estadísticas rápidas */
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    /* Lista de Alumnos */
+    .roster-box {
+      text-align: left;
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      background: #ffffff;
+    }
+    .student-row {
+      padding: 11px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+    }
     .student-row:last-child { border-bottom: none; }
-    .student-row.present { background: #edf7f1; }
-    .badge-present { background: #198754; color: white; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
-    .badge-absent { background: #e9ecef; color: #6c757d; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
-    .sub-info { font-size: 11px; color: #6c757d; margin-top: 2px; }
+    .student-row.present { background: #f0fdf4; }
+    .badge-a {
+      background: #10b981;
+      color: white;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 15px;
+    }
+    .badge-f {
+      background: #fee2e2;
+      color: #dc2626;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 15px;
+    }
+    .sub-info { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    /* Botones de Exportación y Borrado */
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .btn-action {
+      padding: 12px 10px;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      color: white;
+    }
+    .btn-excel { background: #0d9488; }
+    .btn-pdf { background: #2563eb; }
+    .btn-delete {
+      grid-column: span 2;
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 10px;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: var(--primary-light); }
+
+    /* Estilos exclusivos para cuando se exporta a PDF */
+    #printArea { display: none; }
+    @media print {
+      body { background: white; padding: 0; }
+      .app-card { display: none !important; }
+      #printArea { display: block !important; text-align: left; padding: 10px; }
+      table.pdf-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+      table.pdf-table th, table.pdf-table td { border: 1px solid #333; padding: 5px 6px; text-align: center; }
+      table.pdf-table th { background: #e2e8f0; font-weight: bold; }
+      table.pdf-table td.name-col { text-align: left; font-weight: 600; }
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>📋 Pase de Lista Secundaria</h2>
-
-  <!-- 1. SELECTOR DE LOS 3 GRUPOS -->
-  <div class="group-label">Selecciona el Grupo:</div>
-  <div class="group-selector">
-    <button class="group-btn active" onclick="seleccionarGrupo('3.-C')">3.-C</button>
-    <button class="group-btn" onclick="seleccionarGrupo('3.-D')">3.-D</button>
-    <button class="group-btn" onclick="seleccionarGrupo('3.-E')">3.-E</button>
+<div class="app-card">
+  <div class="header">
+    <h1>📋 Control de Asistencia NFC</h1>
+    <p>Secundaria — Grupos 3.-C, 3.-D y 3.-E</p>
   </div>
 
-  <!-- 2. FECHA DEL PASE DE LISTA -->
-  <div class="date-bar">
-    <span>📅 Fecha de lista:</span>
-    <input type="date" id="selectorFecha" onchange="cambiarFecha(this.value)">
-  </div>
-
-  <!-- PESTAÑAS -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="cambiarTab('pase')">Pasar Lista</button>
-    <button class="tab-btn" onclick="cambiarTab('alumnos')">Alumnos / Tarjetas</button>
-  </div>
-
-  <!-- SECCIÓN 1: PASE DE LISTA -->
-  <div id="pase" class="section active">
-    <button id="btnIniciar" class="big-btn btn-green" onclick="activarLectorAsistencia()">▶ Encender Lector NFC</button>
-    
-    <div id="statusBox">
-      Presiona el botón verde para escanear tarjetas del grupo <span id="lblGrupoActual">3.-C</span>
+  <div class="content">
+    <!-- 1. SELECTOR DE GRUPOS -->
+    <div class="section-title">Selecciona el Grupo Activo</div>
+    <div class="group-selector">
+      <button type="button" class="group-btn active" id="btnG_3C" onclick="seleccionarGrupo('3.-C')">3.-C</button>
+      <button type="button" class="group-btn" id="btnG_3D" onclick="seleccionarGrupo('3.-D')">3.-D</button>
+      <button type="button" class="group-btn" id="btnG_3E" onclick="seleccionarGrupo('3.-E')">3.-E</button>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-      <span style="font-size: 14px; font-weight: bold;">
-        Grupo <span id="lblGrupoTabla">3.-C</span> (<span id="resumenAsistencia">0/0</span> hoy)
-      </span>
-      <small style="color: #666;">Días grabados: <strong id="totalDias">0</strong></small>
+    <!-- 2. FECHA DEL DÍA -->
+    <div class="date-bar">
+      <span>📅 Fecha del pase:</span>
+      <input type="date" id="selectorFecha" onchange="cambiarFecha(this.value)">
     </div>
 
-    <div id="listaGrupo" class="roster-box"></div>
+    <!-- 3. PESTAÑAS -->
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tabBtnPase" onclick="cambiarTab('pase')">Pasar Lista</button>
+      <button type="button" class="tab-btn" id="tabBtnAlumnos" onclick="cambiarTab('alumnos')">Registrar Alumnos</button>
+    </div>
 
-    <div style="display: flex; gap: 8px; margin-top: 14px;">
-      <button class="big-btn btn-blue" style="margin:0; font-size:15px;" onclick="descargarExcelAcumulado()">
-        ⬇ Exportar Excel (<span id="lblGrupoExcel">3.-C</span>)
+    <!-- SECCIÓN 1: PASE DE LISTA -->
+    <div id="pase" class="section active">
+      <!-- Botón Prender / Apagar Escáner -->
+      <button type="button" id="btnToggleScanner" class="scanner-toggle-btn scanner-off" onclick="alternarEscanerNFC()">
+        🔓 ENCENDER ESCÁNER NFC
       </button>
-      <button class="big-btn btn-red" style="margin:0; width: 42%;" onclick="borrarConPassword()">
-        🔒 Borrar Lista
+
+      <!-- Estado del Escáner -->
+      <div id="statusBox" class="box-locked">
+        🔒 Escáner Apagado / Bloqueado<br>
+        <small style="font-weight:normal;">Presiona el botón de arriba para leer tarjetas</small>
+      </div>
+
+      <div class="stats-row">
+        <span>Grupo <strong id="txtGrupoLista">3.-C</strong> — Hoy: <strong id="resumenHoy">0/0</strong></span>
+        <span>Días registrados: <strong id="totalDias">0</strong></span>
+      </div>
+
+      <!-- Lista Alfabética -->
+      <div id="listaGrupo" class="roster-box"></div>
+
+      <!-- Botones de Exportación y Borrado -->
+      <div class="action-grid">
+        <button type="button" class="btn-action btn-excel" onclick="descargarExcelSinAcentos()">
+          📊 Descargar Excel
+        </button>
+        <button type="button" class="btn-action btn-pdf" onclick="exportarReportePDF()">
+          📄 Exportar PDF
+        </button>
+        <button type="button" class="btn-action btn-delete" onclick="borrarConPassword()">
+          🔒 Borrar Datos del Grupo (Requiere PIN)
+        </button>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: ALUMNOS Y TARJETAS -->
+    <div id="alumnos" class="section">
+      <h3 style="font-size: 14px; margin: 4px 0;">Opción 1: Grabar Sticker NFC (<span class="lblGrupoDin">3.-C</span>)</h3>
+      <p style="font-size: 12px; color: #64748b; margin: 4px 0 8px 0;">Escribe Apellidos y Nombre para el orden alfabético:</p>
+      <input type="text" id="inputNombre" placeholder="Ej. Hernandez Juarez Juan">
+      <button type="button" class="scanner-toggle-btn" style="background:#2563eb;" onclick="grabarTarjetaAlumno()">
+        📲 Grabar en Sticker y Agregar
+      </button>
+      <div id="statusRegistro" style="margin: 8px 0; font-weight: bold; font-size: 13px;"></div>
+
+      <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+      <h3 style="font-size: 14px; margin: 4px 0;">Opción 2: Pegar Lista Completa (<span class="lblGrupoDin">3.-C</span>)</h3>
+      <p style="font-size: 12px; color: #64748b; margin: 4px 0 8px 0;">Pega un alumno por renglón (se ordenan de la A a la Z):</p>
+      <textarea id="inputListaMasiva" rows="4" placeholder="Aguilar Lopez Sofia&#10;Hernandez Perez Mateo&#10;Zuniga Gomez Diego"></textarea>
+      <button type="button" class="scanner-toggle-btn scanner-off" style="padding:11px; font-size:14px;" onclick="agregarListaMasiva()">
+        ➕ Cargar Lista al Grupo
       </button>
     </div>
-  </div>
-
-  <!-- SECCIÓN 2: GESTIÓN DE ALUMNOS Y TARJETAS NFC -->
-  <div id="alumnos" class="section">
-    <h3 style="font-size: 15px; margin: 5px 0;">Opción A: Grabar Sticker NFC para <span class="txtGrupo">3.-C</span></h3>
-    <p style="font-size: 12px; color: #666; margin: 4px 0;">Sugerencia: Escribe "Apellido Paterno Materno Nombre" para el orden alfabético.</p>
-    <input type="text" id="inputNombre" placeholder="Ej. Hernández Juárez Juan">
-    <button class="big-btn btn-blue" onclick="grabarTarjetaAlumno()">📲 Grabar en Sticker y Agregar a Lista</button>
-    <div id="statusRegistro" style="margin: 8px 0; font-weight: bold; font-size: 14px;"></div>
-
-    <hr style="margin: 16px 0; border: 0; border-top: 1px solid #ddd;">
-
-    <h3 style="font-size: 15px; margin: 5px 0;">Opción B: Pegar lista completa de <span class="txtGrupo">3.-C</span></h3>
-    <p style="font-size: 12px; color: #666; margin: 4px 0;">Pega los nombres (uno por renglón); se ordenarán alfabéticamente solos:</p>
-    <textarea id="inputListaMasiva" rows="4" placeholder="Aguilar López Sofía&#10;Hernández Pérez Mateo&#10;Zúñiga Gómez Diego"></textarea>
-    <button class="big-btn btn-green" style="padding: 10px; font-size: 14px;" onclick="agregarListaMasiva()">➕ Cargar y Ordenar Alumnos</button>
   </div>
 </div>
+
+<!-- Área oculta para generar el PDF limpio -->
+<div id="printArea"></div>
 
 <script>
   const PASSWORD_BORRADO = "101204";
   let grupoActual = '3.-C';
   let fechaActual = obtenerFechaLocalISO();
-  let modoNFC = 'ninguno'; // 'asistencia' o 'grabacion'
+  let escanerActivo = false; // Controla Prendido / Apagado
+  let modoGrabacion = false;
   let ndef = null;
 
-  // Estructura de datos:
-  // { "3.-C": { fechas: ["2026-10-24"], alumnos: { "Nombre": { "2026-10-24": true } } } }
+  // Cargar datos (compatible con la versión anterior para no perder pruebas)
   let datosEscolar = JSON.parse(localStorage.getItem('asistencia_secundaria_v3') || 'null');
   if (!datosEscolar) {
     datosEscolar = {
@@ -137,28 +368,33 @@
     guardarDatos();
   }
 
-  // Obtiene la fecha exacta local (México) en formato YYYY-MM-DD
+  function guardarDatos() {
+    localStorage.setItem('asistencia_secundaria_v3', JSON.stringify(datosEscolar));
+  }
+
   function obtenerFechaLocalISO() {
     const hoy = new Date();
     const offset = hoy.getTimezoneOffset() * 60000;
     return new Date(hoy.getTime() - offset).toISOString().slice(0, 10);
   }
 
-  // Convierte YYYY-MM-DD a DD/MM/YYYY para mostrar en Excel y pantalla
   function formatearFechaBonita(iso) {
-    const partes = iso.split('-');
-    if (partes.length !== 3) return iso;
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    const p = iso.split('-');
+    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
   }
 
-  function guardarDatos() {
-    localStorage.setItem('asistencia_secundaria_v3', JSON.stringify(datosEscolar));
+  // Elimina cualquier acento o carácter especial para que Excel nunca falle
+  function quitarAcentos(texto) {
+    return String(texto)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/ñ/g, "n")
+      .replace(/Ñ/g, "N");
   }
 
-  // Devuelve los nombres del grupo ordenados estrictamente de la A a la Z (español)
   function obtenerNombresOrdenados(grupo) {
-    const alumnosObj = datosEscolar[grupo].alumnos || {};
-    return Object.keys(alumnosObj).sort((a, b) => 
+    const alumnosObj = datosEscolar[grupo]?.alumnos || {};
+    return Object.keys(alumnosObj).sort((a, b) =>
       a.localeCompare(b, 'es', { sensitivity: 'base' })
     );
   }
@@ -166,19 +402,19 @@
   function asegurarFechaEnGrupo(grupo, fechaISO) {
     if (!datosEscolar[grupo].fechas.includes(fechaISO)) {
       datosEscolar[grupo].fechas.push(fechaISO);
-      datosEscolar[grupo].fechas.sort(); // Orden cronológico de columnas
+      datosEscolar[grupo].fechas.sort();
     }
   }
 
   function asegurarAlumnoEnGrupo(grupo, nombre) {
-    const nombreLimpio = nombre.trim();
-    if (!datosEscolar[grupo].alumnos[nombreLimpio]) {
-      datosEscolar[grupo].alumnos[nombreLimpio] = {};
+    const limpio = nombre.trim();
+    if (!datosEscolar[grupo].alumnos[limpio]) {
+      datosEscolar[grupo].alumnos[limpio] = {};
     }
-    return nombreLimpio;
+    return limpio;
   }
 
-  function sonarBip(frecuencia = 880, duracion = 150) {
+  function sonarBip(frecuencia = 880, duracion = 140) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctx.createOscillator();
@@ -190,42 +426,92 @@
     } catch (e) {}
   }
 
+  // Cambio inmediato entre 3.-C, 3.-D y 3.-E sin trabarse
   function seleccionarGrupo(grupo) {
     grupoActual = grupo;
-    document.querySelectorAll('.group-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.innerText === grupo);
-    });
-    document.getElementById('lblGrupoActual').innerText = grupo;
-    document.getElementById('lblGrupoTabla').innerText = grupo;
-    document.getElementById('lblGrupoExcel').innerText = grupo;
-    document.querySelectorAll('.txtGrupo').forEach(el => el.innerText = grupo);
+    document.getElementById('btnG_3C').classList.toggle('active', grupo === '3.-C');
+    document.getElementById('btnG_3D').classList.toggle('active', grupo === '3.-D');
+    document.getElementById('btnG_3E').classList.toggle('active', grupo === '3.-E');
+
+    document.getElementById('txtGrupoLista').innerText = grupo;
+    document.querySelectorAll('.lblGrupoDin').forEach(el => el.innerText = grupo);
+
+    actualizarMonitorEstado();
     renderizarLista();
   }
 
   function cambiarFecha(nuevaFecha) {
     if (!nuevaFecha) return;
     fechaActual = nuevaFecha;
+    actualizarMonitorEstado();
     renderizarLista();
   }
 
   function cambiarTab(tab) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    if (tab === 'pase') {
-      document.getElementById('pase').classList.add('active');
-      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('pase').classList.toggle('active', tab === 'pase');
+    document.getElementById('alumnos').classList.toggle('active', tab === 'alumnos');
+    document.getElementById('tabBtnPase').classList.toggle('active', tab === 'pase');
+    document.getElementById('tabBtnAlumnos').classList.toggle('active', tab === 'alumnos');
+  }
+
+  // Botón de Prender y Apagar / Bloquear el Escáner NFC
+  async function alternarEscanerNFC() {
+    if (!escanerActivo) {
+      const ok = await inicializarHardwareNFC();
+      if (!ok) return;
+      escanerActivo = true;
+      modoGrabacion = false;
+      if ('wakeLock' in navigator) {
+        try { await navigator.wakeLock.request('screen'); } catch (e) {}
+      }
+      sonarBip(700, 100);
     } else {
-      document.getElementById('alumnos').classList.add('active');
-      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      escanerActivo = false;
+      sonarBip(300, 100);
+    }
+    actualizarMonitorEstado();
+  }
+
+  function actualizarMonitorEstado() {
+    const btn = document.getElementById('btnToggleScanner');
+    const box = document.getElementById('statusBox');
+
+    if (escanerActivo) {
+      btn.className = 'scanner-toggle-btn scanner-on';
+      btn.innerHTML = '⏸ APAGAR / BLOQUEAR ESCÁNER';
+      box.className = 'box-listening';
+      box.innerHTML = `📡 Escáner Activo en <strong>${grupoActual}</strong><br><small>Fecha: ${formatearFechaBonita(fechaActual)} — Acerca las tarjetas</small>`;
+    } else {
+      btn.className = 'scanner-toggle-btn scanner-off';
+      btn.innerHTML = '🔓 ENCENDER ESCÁNER NFC';
+      box.className = 'box-locked';
+      box.innerHTML = `🔒 Escáner Bloqueado (${grupoActual})<br><small style="font-weight:normal;">No leerá tarjetas hasta que lo enciendas</small>`;
     }
   }
 
-  // Permite marcar o quitar asistencia tocando el nombre en la lista
+  async function inicializarHardwareNFC() {
+    if (!('NDEFReader' in window)) {
+      alert("Este navegador no soporta Web NFC. Usa Google Chrome en Android.");
+      return false;
+    }
+    try {
+      if (!ndef) {
+        ndef = new NDEFReader();
+        await ndef.scan();
+        ndef.onreading = manejarLecturaNFC;
+      }
+      return true;
+    } catch (err) {
+      alert("Error al encender NFC: " + err.message);
+      return false;
+    }
+  }
+
   function alternarAsistenciaManual(nombre) {
     asegurarFechaEnGrupo(grupoActual, fechaActual);
     const nom = asegurarAlumnoEnGrupo(grupoActual, nombre);
-    const estadoActual = !!datosEscolar[grupoActual].alumnos[nom][fechaActual];
-    datosEscolar[grupoActual].alumnos[nom][fechaActual] = !estadoActual;
+    const actual = !!datosEscolar[grupoActual].alumnos[nom][fechaActual];
+    datosEscolar[grupoActual].alumnos[nom][fechaActual] = !actual;
     guardarDatos();
     renderizarLista();
   }
@@ -239,28 +525,29 @@
     let presentesHoy = 0;
     nombres.forEach(n => { if (alumnosObj[n][fechaActual]) presentesHoy++; });
 
-    document.getElementById('resumenAsistencia').innerText = `${presentesHoy}/${nombres.length}`;
+    document.getElementById('resumenHoy').innerText = `${presentesHoy}/${nombres.length}`;
     document.getElementById('totalDias').innerText = fechasGrupo.length;
 
     if (nombres.length === 0) {
-      contenedor.innerHTML = `<div style="padding: 20px; text-align: center; color: #777;">No hay alumnos en la lista de <strong>${grupoActual}</strong>.<br>Escanea una tarjeta o agrégalos en la pestaña "Alumnos / Tarjetas".</div>`;
+      contenedor.innerHTML = `<div style="padding: 22px; text-align: center; color: #64748b; font-size: 13px;">No hay alumnos en <strong>${grupoActual}</strong>.<br>Agrégalos en la pestaña "Registrar Alumnos" o escanea una tarjeta.</div>`;
       return;
     }
 
     contenedor.innerHTML = nombres.map((nombre, idx) => {
       const vinoHoy = !!alumnosObj[nombre][fechaActual];
-      const totalAsistencias = fechasGrupo.filter(f => alumnosObj[nombre][f]).length;
-      const nombreEscapado = nombre.replace(/'/g, "\\'");
+      const totalA = fechasGrupo.filter(f => alumnosObj[nombre][f]).length;
+      const totalF = fechasGrupo.length - totalA;
+      const nombreSeguro = nombre.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 
       return `
-        <div class="student-row ${vinoHoy ? 'present' : ''}" onclick="alternarAsistenciaManual('${nombreEscapado}')">
+        <div class="student-row ${vinoHoy ? 'present' : ''}" onclick="alternarAsistenciaManual('${nombreSeguro}')">
           <div>
             <strong>${idx + 1}. ${nombre}</strong>
-            <div class="sub-info">Acumulado: ${totalAsistencias} de ${fechasGrupo.length} días</div>
+            <div class="sub-info">Asistencias: ${totalA} | Faltas: ${totalF}</div>
           </div>
-          <span class="${vinoHoy ? 'badge-present' : 'badge-absent'}">
-            ${vinoHoy ? '✓ Asistió' : 'Falta'}
-          </span>
+          <div class="${vinoHoy ? 'badge-a' : 'badge-f'}">
+            ${vinoHoy ? 'A' : 'F'}
+          </div>
         </div>
       `;
     }).join('');
@@ -270,48 +557,22 @@
     const texto = document.getElementById('inputListaMasiva').value;
     const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     if (lineas.length === 0) {
-      alert("Pega al menos un nombre.");
+      alert("Escribe o pega al menos un nombre.");
       return;
     }
-    lineas.forEach(nombre => asegurarAlumnoEnGrupo(grupoActual, nombre));
+    lineas.forEach(nom => asegurarAlumnoEnGrupo(grupoActual, nom));
     guardarDatos();
     document.getElementById('inputListaMasiva').value = '';
     renderizarLista();
-    alert(`Se agregaron y ordenaron alfabéticamente ${lineas.length} alumnos en ${grupoActual}.`);
+    alert(`Se cargaron ${lineas.length} alumnos en el grupo ${grupoActual}.`);
     cambiarTab('pase');
-  }
-
-  async function inicializarNFC() {
-    if (!('NDEFReader' in window)) {
-      alert("Tu navegador no soporta Web NFC. Usa Google Chrome en Android.");
-      return false;
-    }
-    if (!ndef) {
-      ndef = new NDEFReader();
-      await ndef.scan();
-      ndef.onreading = manejarLecturaNFC;
-    }
-    return true;
-  }
-
-  async function activarLectorAsistencia() {
-    const ok = await inicializarNFC();
-    if (!ok) return;
-    modoNFC = 'asistencia';
-    if ('wakeLock' in navigator) {
-      try { await navigator.wakeLock.request('screen'); } catch (e) {}
-    }
-    document.getElementById('btnIniciar').style.display = 'none';
-    const box = document.getElementById('statusBox');
-    box.className = '';
-    box.innerHTML = `📡 <strong>Lector Activo (${grupoActual})</strong><br><small>Fecha: ${formatearFechaBonita(fechaActual)} — Acerca las tarjetas...</small>`;
   }
 
   async function grabarTarjetaAlumno() {
     const nombre = document.getElementById('inputNombre').value.trim();
     const statusReg = document.getElementById('statusRegistro');
     if (!nombre) {
-      alert("Escribe el nombre del alumno primero.");
+      alert("Escribe primero el nombre del alumno.");
       return;
     }
 
@@ -319,26 +580,31 @@
     guardarDatos();
     renderizarLista();
 
-    const ok = await inicializarNFC();
+    const ok = await inicializarHardwareNFC();
     if (!ok) return;
 
-    modoNFC = 'grabacion';
+    modoGrabacion = true;
+    statusReg.style.color = "#1e40af";
     statusReg.innerHTML = `⏳ Acerca el sticker al teléfono para grabar a <strong>${nombre}</strong>...`;
 
     try {
-      await ndef.write({ records: [{ recordType: "text", data: nombre }] });
-      sonarBip(1000, 200);
+      await ndef.write({ records: [{ recordType: "text", data: quitarAcentos(nombre) }] });
+      sonarBip(1050, 200);
       if (navigator.vibrate) navigator.vibrate(200);
-      statusReg.innerHTML = `✅ Sticker grabado y ordenado en <strong>${grupoActual}</strong>.`;
+      statusReg.style.color = "#059669";
+      statusReg.innerHTML = `✅ Sticker grabado y agregado a <strong>${grupoActual}</strong>.`;
       document.getElementById('inputNombre').value = '';
-      setTimeout(() => { modoNFC = 'asistencia'; }, 1000);
-    } catch (error) {
-      statusReg.innerHTML = `❌ Error al grabar: vuelve a acercar el sticker sin moverlo.`;
+    } catch (e) {
+      statusReg.style.color = "#dc2626";
+      statusReg.innerHTML = `❌ No se pudo grabar, acerca el sticker de nuevo sin moverlo.`;
+    } finally {
+      setTimeout(() => { modoGrabacion = false; }, 1200);
     }
   }
 
   function manejarLecturaNFC(event) {
-    if (modoNFC === 'grabacion') return;
+    // Si estamos grabando un sticker o si el escáner está BLOQUEADO/APAGADO, ignorar lectura
+    if (modoGrabacion || !escanerActivo) return;
 
     let nombreLeido = null;
     if (event.message && event.message.records) {
@@ -354,14 +620,14 @@
     const nombreFinal = asegurarAlumnoEnGrupo(grupoActual, nombreLeido || `Tarjeta (${uid})`);
     asegurarFechaEnGrupo(grupoActual, fechaActual);
 
-    const yaTeniaAsistencia = !!datosEscolar[grupoActual].alumnos[nombreFinal][fechaActual];
+    const yaVino = !!datosEscolar[grupoActual].alumnos[nombreFinal][fechaActual];
     const box = document.getElementById('statusBox');
 
-    if (yaTeniaAsistencia) {
-      sonarBip(350, 250);
+    if (yaVino) {
+      sonarBip(340, 250);
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      box.className = 'status-warn';
-      box.innerHTML = `⚠️ <strong>${nombreFinal}</strong><br><small>Ya tenía asistencia registrada hoy (${formatearFechaBonita(fechaActual)})</small>`;
+      box.className = 'box-warn';
+      box.innerHTML = `⚠️ <strong>${nombreFinal}</strong><br><small>Ya tiene Asistencia (A) hoy en ${grupoActual}</small>`;
       return;
     }
 
@@ -369,21 +635,20 @@
     guardarDatos();
     renderizarLista();
 
-    sonarBip(950, 150);
+    sonarBip(950, 140);
     if (navigator.vibrate) navigator.vibrate(150);
-    box.className = 'status-ok';
-    box.innerHTML = `✅ <strong>${nombreFinal}</strong><br><small>Asistencia marcada en ${grupoActual} (${formatearFechaBonita(fechaActual)})</small>`;
+    box.className = 'box-ok';
+    box.innerHTML = `✅ <strong>${nombreFinal}</strong><br><small>Asistencia (A) registrada en ${grupoActual}</small>`;
   }
 
-  // Exporta todos los alumnos alfabéticamente y una columna por cada día registrado
-  function descargarExcelAcumulado() {
+  // Exportar a Excel (.CSV) con "A" y "F" y SIN ACENTOS
+  function descargarExcelSinAcentos() {
     const nombres = obtenerNombresOrdenados(grupoActual);
     if (nombres.length === 0) {
-      alert(`No hay alumnos registrados en el grupo ${grupoActual}.`);
+      alert(`No hay alumnos registrados en ${grupoActual}.`);
       return;
     }
 
-    // Asegura que al menos la fecha seleccionada aparezca como columna si aún no hay días
     if (datosEscolar[grupoActual].fechas.length === 0) {
       asegurarFechaEnGrupo(grupoActual, fechaActual);
     }
@@ -391,53 +656,115 @@
     const fechasOrdenadas = [...datosEscolar[grupoActual].fechas].sort();
     const encabezadosFechas = fechasOrdenadas.map(f => formatearFechaBonita(f)).join(',');
 
-    let csv = `\uFEFFNo.,Nombre del Alumno (${grupoActual}),${encabezadosFechas},Total Asistencias,Total Faltas\n`;
+    // Encabezado 100% libre de acentos
+    let csv = `No.,Alumno (${grupoActual}),${encabezadosFechas},Total A,Total F\n`;
 
     const alumnosObj = datosEscolar[grupoActual].alumnos;
 
     nombres.forEach((nombre, index) => {
-      let asistenciasCount = 0;
-      let faltasCount = 0;
+      let totalA = 0;
+      let totalF = 0;
 
-      const columnasDias = fechasOrdenadas.map(fechaISO => {
-        const vino = !!alumnosObj[nombre][fechaISO];
-        if (vino) {
-          asistenciasCount++;
-          return 'Asistió';
+      const celdasDias = fechasOrdenadas.map(fISO => {
+        const asistio = !!alumnosObj[nombre][fISO];
+        if (asistio) {
+          totalA++;
+          return 'A';
         } else {
-          faltasCount++;
-          return 'Falta';
+          totalF++;
+          return 'F';
         }
       }).join(',');
 
-      csv += `${index + 1},"${nombre}",${columnasDias},${asistenciasCount},${faltasCount}\n`;
+      const nombreSinAcentos = quitarAcentos(nombre);
+      csv += `${index + 1},"${nombreSinAcentos}",${celdasDias},${totalA},${totalF}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Asistencia_${grupoActual.replace('.', '')}_Acumulado.csv`;
+    a.download = `Lista_${grupoActual.replace('.', '')}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   }
 
-  // Botón de borrado protegido con contraseña (101204)
+  // Exportar como PDF limpio de toda la tabla del grupo
+  function exportarReportePDF() {
+    const nombres = obtenerNombresOrdenados(grupoActual);
+    if (nombres.length === 0) {
+      alert(`No hay alumnos registrados en ${grupoActual} para generar el PDF.`);
+      return;
+    }
+
+    if (datosEscolar[grupoActual].fechas.length === 0) {
+      asegurarFechaEnGrupo(grupoActual, fechaActual);
+    }
+
+    const fechasOrdenadas = [...datosEscolar[grupoActual].fechas].sort();
+    const alumnosObj = datosEscolar[grupoActual].alumnos;
+
+    let thFechas = fechasOrdenadas.map(f => `<th>${formatearFechaBonita(f).slice(0,5)}</th>`).join('');
+
+    let filasHTML = nombres.map((nombre, idx) => {
+      let totalA = 0;
+      let totalF = 0;
+      let tdDias = fechasOrdenadas.map(fISO => {
+        const vino = !!alumnosObj[nombre][fISO];
+        if (vino) { totalA++; return `<td style="color:#166534;font-weight:bold;">A</td>`; }
+        else { totalF++; return `<td style="color:#dc2626;">F</td>`; }
+      }).join('');
+
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="name-col">${quitarAcentos(nombre)}</td>
+          ${tdDias}
+          <td><strong>${totalA}</strong></td>
+          <td>${totalF}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = `
+      <h2 style="margin:0 0 4px 0;">Reporte de Asistencia Escolar — Grupo ${grupoActual}</h2>
+      <p style="margin:0 0 10px 0; font-size:12px;">Nomenclatura: <strong>A</strong> = Asistencia | <strong>F</strong> = Falta</p>
+      <table class="pdf-table">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Nombre del Alumno</th>
+            ${thFechas}
+            <th>Total A</th>
+            <th>Total F</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+    `;
+
+    window.print();
+  }
+
+  // Borrado protegido con contraseña (101204)
   function borrarConPassword() {
-    const pass = prompt(`🔒 Ingresa la contraseña para borrar registros del grupo ${grupoActual}:`);
-    if (pass === null) return; // Canceló
+    const pass = prompt(`🔒 Ingresa el PIN de seguridad para borrar datos de ${grupoActual}:`);
+    if (pass === null) return;
 
     if (pass !== PASSWORD_BORRADO) {
-      alert("❌ Contraseña incorrecta. No se borró ningún dato.");
+      alert("❌ PIN incorrecto. Acción bloqueada.");
       return;
     }
 
     const opcion = prompt(
-      `Contraseña correcta. ¿Qué deseas borrar del grupo ${grupoActual}?\n\n` +
-      `Escribe 1: Borrar SOLO las asistencias de hoy (${formatearFechaBonita(fechaActual)})\n` +
-      `Escribe 2: Reiniciar TODAS las fechas acumuladas (mantiene los nombres de los alumnos)\n` +
-      `Escribe 3: Borrar TODO el grupo (incluyendo nombres)`
+      `PIN correcto. ¿Qué deseas borrar del grupo ${grupoActual}?\n\n` +
+      `Escribe 1: Borrar SOLO el pase de lista de hoy (${formatearFechaBonita(fechaActual)})\n` +
+      `Escribe 2: Borrar TODAS las fechas (conservando los nombres de los alumnos)\n` +
+      `Escribe 3: Borrar TODO el grupo por completo`
     );
 
     if (opcion === "1") {
@@ -447,7 +774,7 @@
       datosEscolar[grupoActual].fechas = datosEscolar[grupoActual].fechas.filter(f => f !== fechaActual);
       guardarDatos();
       renderizarLista();
-      alert(`✅ Se borraron las asistencias del día ${formatearFechaBonita(fechaActual)}.`);
+      alert(`✅ Se borró el registro del día ${formatearFechaBonita(fechaActual)}.`);
     } else if (opcion === "2") {
       Object.keys(datosEscolar[grupoActual].alumnos).forEach(nom => {
         datosEscolar[grupoActual].alumnos[nom] = {};
@@ -455,16 +782,16 @@
       datosEscolar[grupoActual].fechas = [];
       guardarDatos();
       renderizarLista();
-      alert(`✅ Se reinició el historial de fechas de ${grupoActual}. Los nombres de los alumnos se conservaron.`);
+      alert(`✅ Historial de fechas reiniciado en ${grupoActual}.`);
     } else if (opcion === "3") {
       datosEscolar[grupoActual] = { fechas: [], alumnos: {} };
       guardarDatos();
       renderizarLista();
-      alert(`✅ Grupo ${grupoActual} vaciado por completo.`);
+      alert(`✅ Grupo ${grupoActual} eliminado por completo.`);
     }
   }
 
-  // Inicializar al abrir
+  // Inicializar
   document.getElementById('selectorFecha').value = fechaActual;
   seleccionarGrupo('3.-C');
 </script>
