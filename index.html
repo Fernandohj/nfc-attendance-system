@@ -3,89 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pase de Lista NFC</title>
+  <title>Control de Asistencia Secundaria</title>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { margin: 0; padding: 15px; background: #f0f2f5; color: #1c1e21; text-align: center; }
-    .container { max-width: 420px; margin: auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    h2 { margin-top: 0; color: #0d6efd; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 10px; border: none; background: #e4e6eb; border-radius: 8px; font-weight: bold; cursor: pointer; color: #4b4f56; }
-    .tab-btn.active { background: #0d6efd; color: white; }
+    body { margin: 0; padding: 12px; background: #f0f2f5; color: #1c1e21; text-align: center; }
+    .container { max-width: 460px; margin: auto; background: white; padding: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    h2 { margin: 0 0 12px 0; color: #0d6efd; font-size: 20px; }
+
+    /* Selector de los 3 Grupos (3.-C, 3.-D, 3.-E) */
+    .group-label { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .group-selector { display: flex; gap: 8px; margin-bottom: 14px; }
+    .group-btn { flex: 1; padding: 14px 0; font-size: 18px; font-weight: 800; border: 2px solid #0d6efd; background: white; color: #0d6efd; border-radius: 12px; cursor: pointer; transition: 0.15s; }
+    .group-btn.active { background: #0d6efd; color: white; box-shadow: 0 3px 8px rgba(13,110,253,0.3); }
+
+    /* Barra de Fecha del Día */
+    .date-bar { display: flex; align-items: center; justify-content: space-between; background: #e9ecef; padding: 8px 12px; border-radius: 10px; margin-bottom: 14px; font-size: 14px; font-weight: bold; }
+    .date-bar input[type="date"] { border: 1px solid #ced4da; border-radius: 6px; padding: 6px 8px; font-size: 14px; font-weight: bold; background: white; color: #212529; }
+
+    /* Pestañas de navegación */
+    .tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .tab-btn { flex: 1; padding: 9px; border: none; background: #e4e6eb; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; color: #4b4f56; }
+    .tab-btn.active { background: #198754; color: white; }
+
     .section { display: none; }
     .section.active { display: block; }
-    .big-btn { width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; margin: 10px 0; color: white; }
+
+    .big-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; margin: 6px 0; color: white; }
     .btn-green { background: #198754; }
     .btn-blue { background: #0d6efd; }
-    .btn-gray { background: #6c757d; }
-    .btn-red { background: #dc3545; font-size: 14px; padding: 10px; }
-    input[type="text"] { width: 100%; padding: 14px; font-size: 16px; border: 2px solid #ced4da; border-radius: 10px; margin-bottom: 12px; }
-    #statusBox { margin: 15px 0; padding: 20px; border-radius: 12px; background: #f8f9fa; border: 2px dashed #adb5bd; font-size: 18px; font-weight: bold; min-height: 90px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .btn-red { background: #dc3545; font-size: 13px; padding: 10px; }
+
+    input[type="text"], textarea { width: 100%; padding: 12px; font-size: 15px; border: 2px solid #ced4da; border-radius: 10px; margin-bottom: 10px; }
+    
+    #statusBox { margin: 10px 0; padding: 15px; border-radius: 12px; background: #f8f9fa; border: 2px dashed #adb5bd; font-size: 16px; font-weight: bold; min-height: 75px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .status-ok { background: #d1e7dd !important; border-color: #198754 !important; color: #0f5132; }
     .status-warn { background: #fff3cd !important; border-color: #ffc107 !important; color: #664d03; }
-    .log-list { text-align: left; max-height: 220px; overflow-y: auto; margin-top: 10px; }
-    .log-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 15px; display: flex; justify-content: space-between; }
-    .badge { background: #e9ecef; padding: 3px 8px; border-radius: 6px; font-size: 13px; color: #495057; }
+
+    /* Lista alfabética de alumnos */
+    .roster-box { text-align: left; max-height: 290px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 10px; margin-top: 8px; }
+    .student-row { padding: 11px 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 14px; cursor: pointer; user-select: none; }
+    .student-row:last-child { border-bottom: none; }
+    .student-row.present { background: #edf7f1; }
+    .badge-present { background: #198754; color: white; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
+    .badge-absent { background: #e9ecef; color: #6c757d; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
+    .sub-info { font-size: 11px; color: #6c757d; margin-top: 2px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>📋 Asistencia NFC</h2>
+  <h2>📋 Pase de Lista Secundaria</h2>
 
-  <!-- Pestañas de navegación -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="cambiarTab('pase')">Pase de Lista</button>
-    <button class="tab-btn" onclick="cambiarTab('registro')">Vincular Tarjeta</button>
+  <!-- 1. SELECTOR DE LOS 3 GRUPOS -->
+  <div class="group-label">Selecciona el Grupo:</div>
+  <div class="group-selector">
+    <button class="group-btn active" onclick="seleccionarGrupo('3.-C')">3.-C</button>
+    <button class="group-btn" onclick="seleccionarGrupo('3.-D')">3.-D</button>
+    <button class="group-btn" onclick="seleccionarGrupo('3.-E')">3.-E</button>
   </div>
 
-  <!-- SECCIÓN 1: PASE DE LISTA DIARIO -->
+  <!-- 2. FECHA DEL PASE DE LISTA -->
+  <div class="date-bar">
+    <span>📅 Fecha de lista:</span>
+    <input type="date" id="selectorFecha" onchange="cambiarFecha(this.value)">
+  </div>
+
+  <!-- PESTAÑAS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="cambiarTab('pase')">Pasar Lista</button>
+    <button class="tab-btn" onclick="cambiarTab('alumnos')">Alumnos / Tarjetas</button>
+  </div>
+
+  <!-- SECCIÓN 1: PASE DE LISTA -->
   <div id="pase" class="section active">
-    <button id="btnIniciar" class="big-btn btn-green" onclick="activarLectorAsistencia()">▶ Iniciar Pase de Lista</button>
+    <button id="btnIniciar" class="big-btn btn-green" onclick="activarLectorAsistencia()">▶ Encender Lector NFC</button>
     
     <div id="statusBox">
-      Presiona el botón verde para encender el lector NFC
+      Presiona el botón verde para escanear tarjetas del grupo <span id="lblGrupoActual">3.-C</span>
     </div>
 
-    <div style="display: flex; gap: 8px; margin-top: 15px;">
-      <button class="big-btn btn-blue" style="margin:0; font-size:15px;" onclick="descargarExcel()">⬇ Descargar Excel</button>
-      <button class="big-btn btn-red" style="margin:0; width: 45%;" onclick="limpiarLista()">🗑 Borrar Hoy</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+      <span style="font-size: 14px; font-weight: bold;">
+        Grupo <span id="lblGrupoTabla">3.-C</span> (<span id="resumenAsistencia">0/0</span> hoy)
+      </span>
+      <small style="color: #666;">Días grabados: <strong id="totalDias">0</strong></small>
     </div>
 
-    <h3 style="text-align: left; margin-bottom: 5px;">Asistencias registradas (<span id="contador">0</span>):</h3>
-    <div id="listaAsistencia" class="log-list"></div>
+    <div id="listaGrupo" class="roster-box"></div>
+
+    <div style="display: flex; gap: 8px; margin-top: 14px;">
+      <button class="big-btn btn-blue" style="margin:0; font-size:15px;" onclick="descargarExcelAcumulado()">
+        ⬇ Exportar Excel (<span id="lblGrupoExcel">3.-C</span>)
+      </button>
+      <button class="big-btn btn-red" style="margin:0; width: 42%;" onclick="borrarConPassword()">
+        🔒 Borrar Lista
+      </button>
+    </div>
   </div>
 
-  <!-- SECCIÓN 2: VINCULAR / GRABAR TARJETAS -->
-  <div id="registro" class="section">
-    <p style="font-size: 14px; color: #555;">Escribe el nombre del alumno y acerca el sticker NFC para guardarlo en el chip:</p>
-    <input type="text" id="inputNombre" placeholder="Ej. Juan Pérez Hernández">
-    <button class="big-btn btn-blue" onclick="grabarTarjetaAlumno()">📲 Grabar Nombre en Sticker</button>
-    <div id="statusRegistro" style="margin-top: 15px; font-weight: bold; color: #333;"></div>
+  <!-- SECCIÓN 2: GESTIÓN DE ALUMNOS Y TARJETAS NFC -->
+  <div id="alumnos" class="section">
+    <h3 style="font-size: 15px; margin: 5px 0;">Opción A: Grabar Sticker NFC para <span class="txtGrupo">3.-C</span></h3>
+    <p style="font-size: 12px; color: #666; margin: 4px 0;">Sugerencia: Escribe "Apellido Paterno Materno Nombre" para el orden alfabético.</p>
+    <input type="text" id="inputNombre" placeholder="Ej. Hernández Juárez Juan">
+    <button class="big-btn btn-blue" onclick="grabarTarjetaAlumno()">📲 Grabar en Sticker y Agregar a Lista</button>
+    <div id="statusRegistro" style="margin: 8px 0; font-weight: bold; font-size: 14px;"></div>
+
+    <hr style="margin: 16px 0; border: 0; border-top: 1px solid #ddd;">
+
+    <h3 style="font-size: 15px; margin: 5px 0;">Opción B: Pegar lista completa de <span class="txtGrupo">3.-C</span></h3>
+    <p style="font-size: 12px; color: #666; margin: 4px 0;">Pega los nombres (uno por renglón); se ordenarán alfabéticamente solos:</p>
+    <textarea id="inputListaMasiva" rows="4" placeholder="Aguilar López Sofía&#10;Hernández Pérez Mateo&#10;Zúñiga Gómez Diego"></textarea>
+    <button class="big-btn btn-green" style="padding: 10px; font-size: 14px;" onclick="agregarListaMasiva()">➕ Cargar y Ordenar Alumnos</button>
   </div>
 </div>
 
 <script>
-  let asistencias = JSON.parse(localStorage.getItem('asistencias_nfc') || '[]');
-  let catalogoUID = JSON.parse(localStorage.getItem('catalogo_nfc') || '{}');
-  let modoActual = 'ninguno'; // 'asistencia' o 'grabacion'
+  const PASSWORD_BORRADO = "101204";
+  let grupoActual = '3.-C';
+  let fechaActual = obtenerFechaLocalISO();
+  let modoNFC = 'ninguno'; // 'asistencia' o 'grabacion'
   let ndef = null;
 
-  actualizarTabla();
+  // Estructura de datos:
+  // { "3.-C": { fechas: ["2026-10-24"], alumnos: { "Nombre": { "2026-10-24": true } } } }
+  let datosEscolar = JSON.parse(localStorage.getItem('asistencia_secundaria_v3') || 'null');
+  if (!datosEscolar) {
+    datosEscolar = {
+      '3.-C': { fechas: [], alumnos: {} },
+      '3.-D': { fechas: [], alumnos: {} },
+      '3.-E': { fechas: [], alumnos: {} }
+    };
+    guardarDatos();
+  }
 
-  // Sonido "Bip" generado por código (no requiere archivos MP3)
+  // Obtiene la fecha exacta local (México) en formato YYYY-MM-DD
+  function obtenerFechaLocalISO() {
+    const hoy = new Date();
+    const offset = hoy.getTimezoneOffset() * 60000;
+    return new Date(hoy.getTime() - offset).toISOString().slice(0, 10);
+  }
+
+  // Convierte YYYY-MM-DD a DD/MM/YYYY para mostrar en Excel y pantalla
+  function formatearFechaBonita(iso) {
+    const partes = iso.split('-');
+    if (partes.length !== 3) return iso;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
+  function guardarDatos() {
+    localStorage.setItem('asistencia_secundaria_v3', JSON.stringify(datosEscolar));
+  }
+
+  // Devuelve los nombres del grupo ordenados estrictamente de la A a la Z (español)
+  function obtenerNombresOrdenados(grupo) {
+    const alumnosObj = datosEscolar[grupo].alumnos || {};
+    return Object.keys(alumnosObj).sort((a, b) => 
+      a.localeCompare(b, 'es', { sensitivity: 'base' })
+    );
+  }
+
+  function asegurarFechaEnGrupo(grupo, fechaISO) {
+    if (!datosEscolar[grupo].fechas.includes(fechaISO)) {
+      datosEscolar[grupo].fechas.push(fechaISO);
+      datosEscolar[grupo].fechas.sort(); // Orden cronológico de columnas
+    }
+  }
+
+  function asegurarAlumnoEnGrupo(grupo, nombre) {
+    const nombreLimpio = nombre.trim();
+    if (!datosEscolar[grupo].alumnos[nombreLimpio]) {
+      datosEscolar[grupo].alumnos[nombreLimpio] = {};
+    }
+    return nombreLimpio;
+  }
+
   function sonarBip(frecuencia = 880, duracion = 150) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.value = frecuencia;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      osc.connect(ctx.destination);
       osc.start();
       setTimeout(() => { osc.stop(); ctx.close(); }, duracion);
     } catch (e) {}
+  }
+
+  function seleccionarGrupo(grupo) {
+    grupoActual = grupo;
+    document.querySelectorAll('.group-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.innerText === grupo);
+    });
+    document.getElementById('lblGrupoActual').innerText = grupo;
+    document.getElementById('lblGrupoTabla').innerText = grupo;
+    document.getElementById('lblGrupoExcel').innerText = grupo;
+    document.querySelectorAll('.txtGrupo').forEach(el => el.innerText = grupo);
+    renderizarLista();
+  }
+
+  function cambiarFecha(nuevaFecha) {
+    if (!nuevaFecha) return;
+    fechaActual = nuevaFecha;
+    renderizarLista();
   }
 
   function cambiarTab(tab) {
@@ -95,21 +215,75 @@
       document.getElementById('pase').classList.add('active');
       document.querySelectorAll('.tab-btn')[0].classList.add('active');
     } else {
-      document.getElementById('registro').classList.add('active');
+      document.getElementById('alumnos').classList.add('active');
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
     }
   }
 
-  // Mantener pantalla encendida para que no se bloquee el celular del profesor
-  async function mantenerPantallaEncendida() {
-    if ('wakeLock' in navigator) {
-      try { await navigator.wakeLock.request('screen'); } catch (e) {}
+  // Permite marcar o quitar asistencia tocando el nombre en la lista
+  function alternarAsistenciaManual(nombre) {
+    asegurarFechaEnGrupo(grupoActual, fechaActual);
+    const nom = asegurarAlumnoEnGrupo(grupoActual, nombre);
+    const estadoActual = !!datosEscolar[grupoActual].alumnos[nom][fechaActual];
+    datosEscolar[grupoActual].alumnos[nom][fechaActual] = !estadoActual;
+    guardarDatos();
+    renderizarLista();
+  }
+
+  function renderizarLista() {
+    const contenedor = document.getElementById('listaGrupo');
+    const nombres = obtenerNombresOrdenados(grupoActual);
+    const alumnosObj = datosEscolar[grupoActual].alumnos;
+    const fechasGrupo = datosEscolar[grupoActual].fechas;
+
+    let presentesHoy = 0;
+    nombres.forEach(n => { if (alumnosObj[n][fechaActual]) presentesHoy++; });
+
+    document.getElementById('resumenAsistencia').innerText = `${presentesHoy}/${nombres.length}`;
+    document.getElementById('totalDias').innerText = fechasGrupo.length;
+
+    if (nombres.length === 0) {
+      contenedor.innerHTML = `<div style="padding: 20px; text-align: center; color: #777;">No hay alumnos en la lista de <strong>${grupoActual}</strong>.<br>Escanea una tarjeta o agrégalos en la pestaña "Alumnos / Tarjetas".</div>`;
+      return;
     }
+
+    contenedor.innerHTML = nombres.map((nombre, idx) => {
+      const vinoHoy = !!alumnosObj[nombre][fechaActual];
+      const totalAsistencias = fechasGrupo.filter(f => alumnosObj[nombre][f]).length;
+      const nombreEscapado = nombre.replace(/'/g, "\\'");
+
+      return `
+        <div class="student-row ${vinoHoy ? 'present' : ''}" onclick="alternarAsistenciaManual('${nombreEscapado}')">
+          <div>
+            <strong>${idx + 1}. ${nombre}</strong>
+            <div class="sub-info">Acumulado: ${totalAsistencias} de ${fechasGrupo.length} días</div>
+          </div>
+          <span class="${vinoHoy ? 'badge-present' : 'badge-absent'}">
+            ${vinoHoy ? '✓ Asistió' : 'Falta'}
+          </span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function agregarListaMasiva() {
+    const texto = document.getElementById('inputListaMasiva').value;
+    const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (lineas.length === 0) {
+      alert("Pega al menos un nombre.");
+      return;
+    }
+    lineas.forEach(nombre => asegurarAlumnoEnGrupo(grupoActual, nombre));
+    guardarDatos();
+    document.getElementById('inputListaMasiva').value = '';
+    renderizarLista();
+    alert(`Se agregaron y ordenaron alfabéticamente ${lineas.length} alumnos en ${grupoActual}.`);
+    cambiarTab('pase');
   }
 
   async function inicializarNFC() {
     if (!('NDEFReader' in window)) {
-      alert("Este navegador no soporta Web NFC. Ábrelo en Google Chrome para Android.");
+      alert("Tu navegador no soporta Web NFC. Usa Google Chrome en Android.");
       return false;
     }
     if (!ndef) {
@@ -123,136 +297,176 @@
   async function activarLectorAsistencia() {
     const ok = await inicializarNFC();
     if (!ok) return;
-    modoActual = 'asistencia';
-    mantenerPantallaEncendida();
+    modoNFC = 'asistencia';
+    if ('wakeLock' in navigator) {
+      try { await navigator.wakeLock.request('screen'); } catch (e) {}
+    }
     document.getElementById('btnIniciar').style.display = 'none';
     const box = document.getElementById('statusBox');
     box.className = '';
-    box.innerHTML = '📡 <strong>Lector Activo</strong><br><small>Acerca la tarjeta al teléfono...</small>';
+    box.innerHTML = `📡 <strong>Lector Activo (${grupoActual})</strong><br><small>Fecha: ${formatearFechaBonita(fechaActual)} — Acerca las tarjetas...</small>`;
   }
 
   async function grabarTarjetaAlumno() {
     const nombre = document.getElementById('inputNombre').value.trim();
     const statusReg = document.getElementById('statusRegistro');
     if (!nombre) {
-      alert("Por favor escribe el nombre del alumno primero.");
+      alert("Escribe el nombre del alumno primero.");
       return;
     }
+
+    asegurarAlumnoEnGrupo(grupoActual, nombre);
+    guardarDatos();
+    renderizarLista();
 
     const ok = await inicializarNFC();
     if (!ok) return;
 
-    modoActual = 'grabacion';
-    statusReg.innerHTML = `⏳ Acerca el sticker al reverso del teléfono para asignarlo a <strong>${nombre}</strong>...`;
+    modoNFC = 'grabacion';
+    statusReg.innerHTML = `⏳ Acerca el sticker al teléfono para grabar a <strong>${nombre}</strong>...`;
 
     try {
-      // Escribe el nombre dentro de la memoria del sticker NFC
       await ndef.write({ records: [{ recordType: "text", data: nombre }] });
       sonarBip(1000, 200);
       if (navigator.vibrate) navigator.vibrate(200);
-      statusReg.innerHTML = `✅ ¡Listo! El sticker quedó grabado para <strong>${nombre}</strong>.`;
+      statusReg.innerHTML = `✅ Sticker grabado y ordenado en <strong>${grupoActual}</strong>.`;
       document.getElementById('inputNombre').value = '';
+      setTimeout(() => { modoNFC = 'asistencia'; }, 1000);
     } catch (error) {
-      statusReg.innerHTML = `❌ Error al grabar: acércalo de nuevo sin moverlo (${error.message})`;
+      statusReg.innerHTML = `❌ Error al grabar: vuelve a acercar el sticker sin moverlo.`;
     }
   }
 
   function manejarLecturaNFC(event) {
-    const uid = event.serialNumber || 'Sin-UID';
-    let nombreLeido = null;
+    if (modoNFC === 'grabacion') return;
 
-    // 1. Intentar leer el nombre guardado directamente dentro del chip NFC
+    let nombreLeido = null;
     if (event.message && event.message.records) {
       for (const record of event.message.records) {
         if (record.recordType === "text") {
-          const textDecoder = new TextDecoder(record.encoding || 'utf-8');
-          nombreLeido = textDecoder.decode(record.data);
+          const decoder = new TextDecoder(record.encoding || 'utf-8');
+          nombreLeido = decoder.decode(record.data).trim();
         }
       }
     }
 
-    // Si estamos en modo grabación, también asociamos el UID en memoria local
-    if (modoActual === 'grabacion') {
-      const nombreInput = document.getElementById('inputNombre').value.trim();
-      if (nombreInput) {
-        catalogoUID[uid] = nombreInput;
-        localStorage.setItem('catalogo_nfc', JSON.stringify(catalogoUID));
-      }
+    const uid = event.serialNumber || 'Sin-ID';
+    const nombreFinal = asegurarAlumnoEnGrupo(grupoActual, nombreLeido || `Tarjeta (${uid})`);
+    asegurarFechaEnGrupo(grupoActual, fechaActual);
+
+    const yaTeniaAsistencia = !!datosEscolar[grupoActual].alumnos[nombreFinal][fechaActual];
+    const box = document.getElementById('statusBox');
+
+    if (yaTeniaAsistencia) {
+      sonarBip(350, 250);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      box.className = 'status-warn';
+      box.innerHTML = `⚠️ <strong>${nombreFinal}</strong><br><small>Ya tenía asistencia registrada hoy (${formatearFechaBonita(fechaActual)})</small>`;
       return;
     }
 
-    // Si estamos en modo Pase de Lista
-    if (modoActual === 'asistencia') {
-      const nombreFinal = nombreLeido || catalogoUID[uid] || `Tarjeta (${uid})`;
-      const ahora = new Date();
-      const fecha = ahora.toLocaleDateString('es-MX');
-      const hora = ahora.toLocaleTimeString('es-MX', { hour12: false });
+    datosEscolar[grupoActual].alumnos[nombreFinal][fechaActual] = true;
+    guardarDatos();
+    renderizarLista();
 
-      const box = document.getElementById('statusBox');
-
-      // Evitar registros duplicados el mismo día (por UID o por Nombre)
-      const duplicado = asistencias.some(a => (a.uid === uid || a.nombre === nombreFinal) && a.fecha === fecha);
-      if (duplicado) {
-        sonarBip(300, 300);
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-        box.className = 'status-warn';
-        box.innerHTML = `⚠️ <strong>${nombreFinal}</strong><br><small>Ya había registrado asistencia hoy</small>`;
-        return;
-      }
-
-      // Registrar asistencia nueva
-      asistencias.unshift({ nombre: nombreFinal, fecha, hora, uid });
-      localStorage.setItem('asistencias_nfc', JSON.stringify(asistencias));
-
-      sonarBip(950, 150);
-      if (navigator.vibrate) navigator.vibrate(150);
-      box.className = 'status-ok';
-      box.innerHTML = `✅ <strong>${nombreFinal}</strong><br><small>Entrada registrada a las ${hora}</small>`;
-      actualizarTabla();
-    }
+    sonarBip(950, 150);
+    if (navigator.vibrate) navigator.vibrate(150);
+    box.className = 'status-ok';
+    box.innerHTML = `✅ <strong>${nombreFinal}</strong><br><small>Asistencia marcada en ${grupoActual} (${formatearFechaBonita(fechaActual)})</small>`;
   }
 
-  function actualizarTabla() {
-    document.getElementById('contador').innerText = asistencias.length;
-    const contenedor = document.getElementById('listaAsistencia');
-    contenedor.innerHTML = asistencias.map(a => `
-      <div class="log-item">
-        <span><strong>${a.nombre}</strong></span>
-        <span class="badge">${a.hora}</span>
-      </div>
-    `).join('');
-  }
-
-  function descargarExcel() {
-    if (asistencias.length === 0) {
-      alert("Aún no hay asistencias registradas.");
+  // Exporta todos los alumnos alfabéticamente y una columna por cada día registrado
+  function descargarExcelAcumulado() {
+    const nombres = obtenerNombresOrdenados(grupoActual);
+    if (nombres.length === 0) {
+      alert(`No hay alumnos registrados en el grupo ${grupoActual}.`);
       return;
     }
-    let csv = "\uFEFFNombre del Alumno,Fecha,Hora de Entrada,ID Tarjeta\n";
-    asistencias.forEach(a => {
-      csv += `"${a.nombre}","${a.fecha}","${a.hora}","${a.uid}"\n`;
+
+    // Asegura que al menos la fecha seleccionada aparezca como columna si aún no hay días
+    if (datosEscolar[grupoActual].fechas.length === 0) {
+      asegurarFechaEnGrupo(grupoActual, fechaActual);
+    }
+
+    const fechasOrdenadas = [...datosEscolar[grupoActual].fechas].sort();
+    const encabezadosFechas = fechasOrdenadas.map(f => formatearFechaBonita(f)).join(',');
+
+    let csv = `\uFEFFNo.,Nombre del Alumno (${grupoActual}),${encabezadosFechas},Total Asistencias,Total Faltas\n`;
+
+    const alumnosObj = datosEscolar[grupoActual].alumnos;
+
+    nombres.forEach((nombre, index) => {
+      let asistenciasCount = 0;
+      let faltasCount = 0;
+
+      const columnasDias = fechasOrdenadas.map(fechaISO => {
+        const vino = !!alumnosObj[nombre][fechaISO];
+        if (vino) {
+          asistenciasCount++;
+          return 'Asistió';
+        } else {
+          faltasCount++;
+          return 'Falta';
+        }
+      }).join(',');
+
+      csv += `${index + 1},"${nombre}",${columnasDias},${asistenciasCount},${faltasCount}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Asistencia_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `Asistencia_${grupoActual.replace('.', '')}_Acumulado.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   }
 
-  function limpiarLista() {
-    if (confirm("¿Seguro que deseas borrar la lista de asistencias actual?")) {
-      asistencias = [];
-      localStorage.removeItem('asistencias_nfc');
-      actualizarTabla();
-      const box = document.getElementById('statusBox');
-      box.className = '';
-      box.innerHTML = 'Lista limpia. Acerca una tarjeta...';
+  // Botón de borrado protegido con contraseña (101204)
+  function borrarConPassword() {
+    const pass = prompt(`🔒 Ingresa la contraseña para borrar registros del grupo ${grupoActual}:`);
+    if (pass === null) return; // Canceló
+
+    if (pass !== PASSWORD_BORRADO) {
+      alert("❌ Contraseña incorrecta. No se borró ningún dato.");
+      return;
+    }
+
+    const opcion = prompt(
+      `Contraseña correcta. ¿Qué deseas borrar del grupo ${grupoActual}?\n\n` +
+      `Escribe 1: Borrar SOLO las asistencias de hoy (${formatearFechaBonita(fechaActual)})\n` +
+      `Escribe 2: Reiniciar TODAS las fechas acumuladas (mantiene los nombres de los alumnos)\n` +
+      `Escribe 3: Borrar TODO el grupo (incluyendo nombres)`
+    );
+
+    if (opcion === "1") {
+      Object.keys(datosEscolar[grupoActual].alumnos).forEach(nom => {
+        delete datosEscolar[grupoActual].alumnos[nom][fechaActual];
+      });
+      datosEscolar[grupoActual].fechas = datosEscolar[grupoActual].fechas.filter(f => f !== fechaActual);
+      guardarDatos();
+      renderizarLista();
+      alert(`✅ Se borraron las asistencias del día ${formatearFechaBonita(fechaActual)}.`);
+    } else if (opcion === "2") {
+      Object.keys(datosEscolar[grupoActual].alumnos).forEach(nom => {
+        datosEscolar[grupoActual].alumnos[nom] = {};
+      });
+      datosEscolar[grupoActual].fechas = [];
+      guardarDatos();
+      renderizarLista();
+      alert(`✅ Se reinició el historial de fechas de ${grupoActual}. Los nombres de los alumnos se conservaron.`);
+    } else if (opcion === "3") {
+      datosEscolar[grupoActual] = { fechas: [], alumnos: {} };
+      guardarDatos();
+      renderizarLista();
+      alert(`✅ Grupo ${grupoActual} vaciado por completo.`);
     }
   }
+
+  // Inicializar al abrir
+  document.getElementById('selectorFecha').value = fechaActual;
+  seleccionarGrupo('3.-C');
 </script>
 
 </body>
