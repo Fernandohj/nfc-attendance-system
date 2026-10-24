@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pase de Lista NFC</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; padding: 15px; background: #f0f2f5; color: #1c1e21; text-align: center; }
+    .container { max-width: 420px; margin: auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    h2 { margin-top: 0; color: #0d6efd; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: #e4e6eb; border-radius: 8px; font-weight: bold; cursor: pointer; color: #4b4f56; }
+    .tab-btn.active { background: #0d6efd; color: white; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .big-btn { width: 100%; padding: 16px; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; margin: 10px 0; color: white; }
+    .btn-green { background: #198754; }
+    .btn-blue { background: #0d6efd; }
+    .btn-gray { background: #6c757d; }
+    .btn-red { background: #dc3545; font-size: 14px; padding: 10px; }
+    input[type="text"] { width: 100%; padding: 14px; font-size: 16px; border: 2px solid #ced4da; border-radius: 10px; margin-bottom: 12px; }
+    #statusBox { margin: 15px 0; padding: 20px; border-radius: 12px; background: #f8f9fa; border: 2px dashed #adb5bd; font-size: 18px; font-weight: bold; min-height: 90px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .status-ok { background: #d1e7dd !important; border-color: #198754 !important; color: #0f5132; }
+    .status-warn { background: #fff3cd !important; border-color: #ffc107 !important; color: #664d03; }
+    .log-list { text-align: left; max-height: 220px; overflow-y: auto; margin-top: 10px; }
+    .log-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 15px; display: flex; justify-content: space-between; }
+    .badge { background: #e9ecef; padding: 3px 8px; border-radius: 6px; font-size: 13px; color: #495057; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📋 Asistencia NFC</h2>
+
+  <!-- Pestañas de navegación -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="cambiarTab('pase')">Pase de Lista</button>
+    <button class="tab-btn" onclick="cambiarTab('registro')">Vincular Tarjeta</button>
+  </div>
+
+  <!-- SECCIÓN 1: PASE DE LISTA DIARIO -->
+  <div id="pase" class="section active">
+    <button id="btnIniciar" class="big-btn btn-green" onclick="activarLectorAsistencia()">▶ Iniciar Pase de Lista</button>
+    
+    <div id="statusBox">
+      Presiona el botón verde para encender el lector NFC
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
+      <button class="big-btn btn-blue" style="margin:0; font-size:15px;" onclick="descargarExcel()">⬇ Descargar Excel</button>
+      <button class="big-btn btn-red" style="margin:0; width: 45%;" onclick="limpiarLista()">🗑 Borrar Hoy</button>
+    </div>
+
+    <h3 style="text-align: left; margin-bottom: 5px;">Asistencias registradas (<span id="contador">0</span>):</h3>
+    <div id="listaAsistencia" class="log-list"></div>
+  </div>
+
+  <!-- SECCIÓN 2: VINCULAR / GRABAR TARJETAS -->
+  <div id="registro" class="section">
+    <p style="font-size: 14px; color: #555;">Escribe el nombre del alumno y acerca el sticker NFC para guardarlo en el chip:</p>
+    <input type="text" id="inputNombre" placeholder="Ej. Juan Pérez Hernández">
+    <button class="big-btn btn-blue" onclick="grabarTarjetaAlumno()">📲 Grabar Nombre en Sticker</button>
+    <div id="statusRegistro" style="margin-top: 15px; font-weight: bold; color: #333;"></div>
+  </div>
+</div>
+
+<script>
+  let asistencias = JSON.parse(localStorage.getItem('asistencias_nfc') || '[]');
+  let catalogoUID = JSON.parse(localStorage.getItem('catalogo_nfc') || '{}');
+  let modoActual = 'ninguno'; // 'asistencia' o 'grabacion'
+  let ndef = null;
+
+  actualizarTabla();
+
+  // Sonido "Bip" generado por código (no requiere archivos MP3)
+  function sonarBip(frecuencia = 880, duracion = 150) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = frecuencia;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      setTimeout(() => { osc.stop(); ctx.close(); }, duracion);
+    } catch (e) {}
+  }
+
+  function cambiarTab(tab) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (tab === 'pase') {
+      document.getElementById('pase').classList.add('active');
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    } else {
+      document.getElementById('registro').classList.add('active');
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    }
+  }
+
+  // Mantener pantalla encendida para que no se bloquee el celular del profesor
+  async function mantenerPantallaEncendida() {
+    if ('wakeLock' in navigator) {
+      try { await navigator.wakeLock.request('screen'); } catch (e) {}
+    }
+  }
+
+  async function inicializarNFC() {
+    if (!('NDEFReader' in window)) {
+      alert("Este navegador no soporta Web NFC. Ábrelo en Google Chrome para Android.");
+      return false;
+    }
+    if (!ndef) {
+      ndef = new NDEFReader();
+      await ndef.scan();
+      ndef.onreading = manejarLecturaNFC;
+    }
+    return true;
+  }
+
+  async function activarLectorAsistencia() {
+    const ok = await inicializarNFC();
+    if (!ok) return;
+    modoActual = 'asistencia';
+    mantenerPantallaEncendida();
+    document.getElementById('btnIniciar').style.display = 'none';
+    const box = document.getElementById('statusBox');
+    box.className = '';
+    box.innerHTML = '📡 <strong>Lector Activo</strong><br><small>Acerca la tarjeta al teléfono...</small>';
+  }
+
+  async function grabarTarjetaAlumno() {
+    const nombre = document.getElementById('inputNombre').value.trim();
+    const statusReg = document.getElementById('statusRegistro');
+    if (!nombre) {
+      alert("Por favor escribe el nombre del alumno primero.");
+      return;
+    }
+
+    const ok = await inicializarNFC();
+    if (!ok) return;
+
+    modoActual = 'grabacion';
+    statusReg.innerHTML = `⏳ Acerca el sticker al reverso del teléfono para asignarlo a <strong>${nombre}</strong>...`;
+
+    try {
+      // Escribe el nombre dentro de la memoria del sticker NFC
+      await ndef.write({ records: [{ recordType: "text", data: nombre }] });
+      sonarBip(1000, 200);
+      if (navigator.vibrate) navigator.vibrate(200);
+      statusReg.innerHTML = `✅ ¡Listo! El sticker quedó grabado para <strong>${nombre}</strong>.`;
+      document.getElementById('inputNombre').value = '';
+    } catch (error) {
+      statusReg.innerHTML = `❌ Error al grabar: acércalo de nuevo sin moverlo (${error.message})`;
+    }
+  }
+
+  function manejarLecturaNFC(event) {
+    const uid = event.serialNumber || 'Sin-UID';
+    let nombreLeido = null;
+
+    // 1. Intentar leer el nombre guardado directamente dentro del chip NFC
+    if (event.message && event.message.records) {
+      for (const record of event.message.records) {
+        if (record.recordType === "text") {
+          const textDecoder = new TextDecoder(record.encoding || 'utf-8');
+          nombreLeido = textDecoder.decode(record.data);
+        }
+      }
+    }
+
+    // Si estamos en modo grabación, también asociamos el UID en memoria local
+    if (modoActual === 'grabacion') {
+      const nombreInput = document.getElementById('inputNombre').value.trim();
+      if (nombreInput) {
+        catalogoUID[uid] = nombreInput;
+        localStorage.setItem('catalogo_nfc', JSON.stringify(catalogoUID));
+      }
+      return;
+    }
+
+    // Si estamos en modo Pase de Lista
+    if (modoActual === 'asistencia') {
+      const nombreFinal = nombreLeido || catalogoUID[uid] || `Tarjeta (${uid})`;
+      const ahora = new Date();
+      const fecha = ahora.toLocaleDateString('es-MX');
+      const hora = ahora.toLocaleTimeString('es-MX', { hour12: false });
+
+      const box = document.getElementById('statusBox');
+
+      // Evitar registros duplicados el mismo día (por UID o por Nombre)
+      const duplicado = asistencias.some(a => (a.uid === uid || a.nombre === nombreFinal) && a.fecha === fecha);
+      if (duplicado) {
+        sonarBip(300, 300);
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        box.className = 'status-warn';
+        box.innerHTML = `⚠️ <strong>${nombreFinal}</strong><br><small>Ya había registrado asistencia hoy</small>`;
+        return;
+      }
+
+      // Registrar asistencia nueva
+      asistencias.unshift({ nombre: nombreFinal, fecha, hora, uid });
+      localStorage.setItem('asistencias_nfc', JSON.stringify(asistencias));
+
+      sonarBip(950, 150);
+      if (navigator.vibrate) navigator.vibrate(150);
+      box.className = 'status-ok';
+      box.innerHTML = `✅ <strong>${nombreFinal}</strong><br><small>Entrada registrada a las ${hora}</small>`;
+      actualizarTabla();
+    }
+  }
+
+  function actualizarTabla() {
+    document.getElementById('contador').innerText = asistencias.length;
+    const contenedor = document.getElementById('listaAsistencia');
+    contenedor.innerHTML = asistencias.map(a => `
+      <div class="log-item">
+        <span><strong>${a.nombre}</strong></span>
+        <span class="badge">${a.hora}</span>
+      </div>
+    `).join('');
+  }
+
+  function descargarExcel() {
+    if (asistencias.length === 0) {
+      alert("Aún no hay asistencias registradas.");
+      return;
+    }
+    let csv = "\uFEFFNombre del Alumno,Fecha,Hora de Entrada,ID Tarjeta\n";
+    asistencias.forEach(a => {
+      csv += `"${a.nombre}","${a.fecha}","${a.hora}","${a.uid}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Asistencia_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function limpiarLista() {
+    if (confirm("¿Seguro que deseas borrar la lista de asistencias actual?")) {
+      asistencias = [];
+      localStorage.removeItem('asistencias_nfc');
+      actualizarTabla();
+      const box = document.getElementById('statusBox');
+      box.className = '';
+      box.innerHTML = 'Lista limpia. Acerca una tarjeta...';
+    }
+  }
+</script>
+
+</body>
+</html>
