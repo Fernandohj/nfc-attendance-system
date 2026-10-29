@@ -9,7 +9,6 @@
       --primary: #1e40af;
       --primary-light: #3b82f6;
       --success: #10b981;
-      --success-dark: #059669;
       --danger: #ef4444;
       --warning: #f59e0b;
       --dark: #0f172a;
@@ -28,7 +27,6 @@
       overflow: hidden;
     }
 
-    /* Encabezado moderno */
     .header {
       background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
       color: white;
@@ -138,7 +136,7 @@
       border-radius: 14px;
       font-size: 15px;
       font-weight: 700;
-      min-height: 74px;
+      min-height: 76px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -149,6 +147,7 @@
     .box-listening { background: #eff6ff; border: 2px solid #60a5fa; color: #1e40af; animation: pulseBorder 1.8s infinite; }
     .box-ok { background: #dcfce7; border: 2px solid #22c55e; color: #166534; }
     .box-warn { background: #fef3c7; border: 2px solid #f59e0b; color: #92400e; }
+    .box-error { background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; }
 
     @keyframes pulseBorder {
       0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
@@ -156,7 +155,6 @@
       100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
     }
 
-    /* Estadísticas rápidas */
     .stats-row {
       display: flex;
       justify-content: space-between;
@@ -236,7 +234,7 @@
       margin-top: 4px;
     }
 
-    input[type="text"], textarea {
+    input[type="text"], textarea, select {
       width: 100%;
       padding: 12px;
       font-size: 14px;
@@ -244,10 +242,23 @@
       border-radius: 12px;
       margin-bottom: 10px;
       outline: none;
+      background: white;
+      color: var(--dark);
     }
-    input[type="text"]:focus, textarea:focus { border-color: var(--primary-light); }
+    input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--primary-light); }
 
-    /* Estilos exclusivos para cuando se exporta a PDF */
+    .card-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+      text-align: left;
+    }
+    .card-box h3 { margin: 0 0 6px 0; font-size: 14px; color: #1e3a8a; }
+    .card-box p { margin: 0 0 8px 0; font-size: 12px; color: #64748b; }
+
+    /* Estilos exclusivos para PDF */
     #printArea { display: none; }
     @media print {
       body { background: white; padding: 0; }
@@ -291,12 +302,10 @@
 
     <!-- SECCIÓN 1: PASE DE LISTA -->
     <div id="pase" class="section active">
-      <!-- Botón Prender / Apagar Escáner -->
       <button type="button" id="btnToggleScanner" class="scanner-toggle-btn scanner-off" onclick="alternarEscanerNFC()">
         🔓 ENCENDER ESCÁNER NFC
       </button>
 
-      <!-- Estado del Escáner -->
       <div id="statusBox" class="box-locked">
         🔒 Escáner Apagado / Bloqueado<br>
         <small style="font-weight:normal;">Presiona el botón de arriba para leer tarjetas</small>
@@ -307,10 +316,8 @@
         <span>Días registrados: <strong id="totalDias">0</strong></span>
       </div>
 
-      <!-- Lista Alfabética -->
       <div id="listaGrupo" class="roster-box"></div>
 
-      <!-- Botones de Exportación y Borrado -->
       <div class="action-grid">
         <button type="button" class="btn-action btn-excel" onclick="descargarExcelSinAcentos()">
           📊 Descargar Excel
@@ -324,40 +331,46 @@
       </div>
     </div>
 
-    <!-- SECCIÓN 2: ALUMNOS Y TARJETAS -->
+    <!-- SECCIÓN 2: ALTA MANUAL Y GRABACIÓN DE TARJETAS -->
     <div id="alumnos" class="section">
-      <h3 style="font-size: 14px; margin: 4px 0;">Opción 1: Grabar Sticker NFC (<span class="lblGrupoDin">3.-C</span>)</h3>
-      <p style="font-size: 12px; color: #64748b; margin: 4px 0 8px 0;">Escribe Apellidos y Nombre para el orden alfabético:</p>
-      <input type="text" id="inputNombre" placeholder="Ej. Hernandez Juarez Juan">
-      <button type="button" class="scanner-toggle-btn" style="background:#2563eb;" onclick="grabarTarjetaAlumno()">
-        📲 Grabar en Sticker y Agregar
-      </button>
-      <div id="statusRegistro" style="margin: 8px 0; font-weight: bold; font-size: 13px;"></div>
+      <!-- PASO 1: ALTA MANUAL -->
+      <div class="card-box">
+        <h3>1️⃣ Dar de alta alumnos en <span class="lblGrupoDin">3.-C</span> (Manual)</h3>
+        <p>Escribe o pega uno o varios alumnos (uno por renglón). Solo los alumnos en esta lista podrán pasar asistencia en <strong class="lblGrupoDin">3.-C</strong>:</p>
+        <textarea id="inputListaMasiva" rows="4" placeholder="Aguilar Lopez Sofia&#10;Hernandez Perez Mateo&#10;Zuniga Gomez Diego"></textarea>
+        <button type="button" class="scanner-toggle-btn scanner-off" style="padding:11px; font-size:14px; margin:0;" onclick="agregarListaMasiva()">
+          ➕ Agregar Manualmente a <span class="lblGrupoDin">3.-C</span>
+        </button>
+      </div>
 
-      <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e2e8f0;">
-
-      <h3 style="font-size: 14px; margin: 4px 0;">Opción 2: Pegar Lista Completa (<span class="lblGrupoDin">3.-C</span>)</h3>
-      <p style="font-size: 12px; color: #64748b; margin: 4px 0 8px 0;">Pega un alumno por renglón (se ordenan de la A a la Z):</p>
-      <textarea id="inputListaMasiva" rows="4" placeholder="Aguilar Lopez Sofia&#10;Hernandez Perez Mateo&#10;Zuniga Gomez Diego"></textarea>
-      <button type="button" class="scanner-toggle-btn scanner-off" style="padding:11px; font-size:14px;" onclick="agregarListaMasiva()">
-        ➕ Cargar Lista al Grupo
-      </button>
+      <!-- PASO 2: GRABAR CHIP DESDE LA LISTA -->
+      <div class="card-box" style="margin-bottom:0;">
+        <h3>2️⃣ Grabar Sticker NFC (<span class="lblGrupoDin">3.-C</span>)</h3>
+        <p>Selecciona un alumno ya registrado en <strong class="lblGrupoDin">3.-C</strong> para grabar sus datos en el chip NFC:</p>
+        <select id="selectAlumnoGrabar">
+          <option value="">-- Primero agrega alumnos arriba --</option>
+        </select>
+        <button type="button" class="scanner-toggle-btn" style="background:#2563eb; padding:12px; font-size:14px; margin:0;" onclick="grabarTarjetaAlumno()">
+          📲 Grabar Sticker del Alumno Seleccionado
+        </button>
+        <div id="statusRegistro" style="margin-top: 8px; font-weight: bold; font-size: 13px; text-align:center;"></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Área oculta para generar el PDF limpio -->
+<!-- Área para generar PDF -->
 <div id="printArea"></div>
 
 <script>
   const PASSWORD_BORRADO = "101204";
+  const GRUPOS = ['3.-C', '3.-D', '3.-E'];
   let grupoActual = '3.-C';
   let fechaActual = obtenerFechaLocalISO();
-  let escanerActivo = false; // Controla Prendido / Apagado
+  let escanerActivo = false;
   let modoGrabacion = false;
   let ndef = null;
 
-  // Cargar datos (compatible con la versión anterior para no perder pruebas)
   let datosEscolar = JSON.parse(localStorage.getItem('asistencia_secundaria_v3') || 'null');
   if (!datosEscolar) {
     datosEscolar = {
@@ -383,13 +396,35 @@
     return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
   }
 
-  // Elimina cualquier acento o carácter especial para que Excel nunca falle
   function quitarAcentos(texto) {
     return String(texto)
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/ñ/g, "n")
-      .replace(/Ñ/g, "N");
+      .replace(/Ñ/g, "N")
+      .trim();
+  }
+
+  // Clave normalizada para comparar nombres sin importar mayúsculas o acentos
+  function normalizarClave(texto) {
+    return quitarAcentos(texto).toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  // Busca si un alumno ya existe en un grupo específico y devuelve su nombre exacto
+  function buscarAlumnoEnGrupo(grupo, nombreBuscado) {
+    const claveBuscada = normalizarClave(nombreBuscado);
+    const nombresGrupo = Object.keys(datosEscolar[grupo]?.alumnos || {});
+    return nombresGrupo.find(n => normalizarClave(n) === claveBuscada) || null;
+  }
+
+  // Busca si el alumno pertenece a OTRO grupo distinto
+  function buscarEnOtrosGrupos(grupoExcluido, nombreBuscado) {
+    for (const g of GRUPOS) {
+      if (g === grupoExcluido) continue;
+      const encontrado = buscarAlumnoEnGrupo(g, nombreBuscado);
+      if (encontrado) return { grupo: g, nombre: encontrado };
+    }
+    return null;
   }
 
   function obtenerNombresOrdenados(grupo) {
@@ -406,14 +441,6 @@
     }
   }
 
-  function asegurarAlumnoEnGrupo(grupo, nombre) {
-    const limpio = nombre.trim();
-    if (!datosEscolar[grupo].alumnos[limpio]) {
-      datosEscolar[grupo].alumnos[limpio] = {};
-    }
-    return limpio;
-  }
-
   function sonarBip(frecuencia = 880, duracion = 140) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -426,7 +453,6 @@
     } catch (e) {}
   }
 
-  // Cambio inmediato entre 3.-C, 3.-D y 3.-E sin trabarse
   function seleccionarGrupo(grupo) {
     grupoActual = grupo;
     document.getElementById('btnG_3C').classList.toggle('active', grupo === '3.-C');
@@ -435,6 +461,7 @@
 
     document.getElementById('txtGrupoLista').innerText = grupo;
     document.querySelectorAll('.lblGrupoDin').forEach(el => el.innerText = grupo);
+    document.getElementById('statusRegistro').innerHTML = '';
 
     actualizarMonitorEstado();
     renderizarLista();
@@ -454,7 +481,6 @@
     document.getElementById('tabBtnAlumnos').classList.toggle('active', tab === 'alumnos');
   }
 
-  // Botón de Prender y Apagar / Bloquear el Escáner NFC
   async function alternarEscanerNFC() {
     if (!escanerActivo) {
       const ok = await inicializarHardwareNFC();
@@ -480,7 +506,7 @@
       btn.className = 'scanner-toggle-btn scanner-on';
       btn.innerHTML = '⏸ APAGAR / BLOQUEAR ESCÁNER';
       box.className = 'box-listening';
-      box.innerHTML = `📡 Escáner Activo en <strong>${grupoActual}</strong><br><small>Fecha: ${formatearFechaBonita(fechaActual)} — Acerca las tarjetas</small>`;
+      box.innerHTML = `📡 Escáner Activo en <strong>${grupoActual}</strong><br><small>Fecha: ${formatearFechaBonita(fechaActual)} — Solo acepta alumnos de ${grupoActual}</small>`;
     } else {
       btn.className = 'scanner-toggle-btn scanner-off';
       btn.innerHTML = '🔓 ENCENDER ESCÁNER NFC';
@@ -508,12 +534,27 @@
   }
 
   function alternarAsistenciaManual(nombre) {
+    if (!datosEscolar[grupoActual].alumnos[nombre]) return;
     asegurarFechaEnGrupo(grupoActual, fechaActual);
-    const nom = asegurarAlumnoEnGrupo(grupoActual, nombre);
-    const actual = !!datosEscolar[grupoActual].alumnos[nom][fechaActual];
-    datosEscolar[grupoActual].alumnos[nom][fechaActual] = !actual;
+    const actual = !!datosEscolar[grupoActual].alumnos[nombre][fechaActual];
+    datosEscolar[grupoActual].alumnos[nombre][fechaActual] = !actual;
     guardarDatos();
     renderizarLista();
+  }
+
+  function actualizarSelectorGrabacion(nombres) {
+    const select = document.getElementById('selectAlumnoGrabar');
+    const valorPrevio = select.value;
+    if (nombres.length === 0) {
+      select.innerHTML = `<option value="">-- No hay alumnos en ${grupoActual} (agrégalos arriba) --</option>`;
+      return;
+    }
+    select.innerHTML = nombres.map((nom, i) =>
+      `<option value="${nom.replace(/"/g, '&quot;')}">${i + 1}. ${nom}</option>`
+    ).join('');
+    if (nombres.includes(valorPrevio)) {
+      select.value = valorPrevio;
+    }
   }
 
   function renderizarLista() {
@@ -522,6 +563,8 @@
     const alumnosObj = datosEscolar[grupoActual].alumnos;
     const fechasGrupo = datosEscolar[grupoActual].fechas;
 
+    actualizarSelectorGrabacion(nombres);
+
     let presentesHoy = 0;
     nombres.forEach(n => { if (alumnosObj[n][fechaActual]) presentesHoy++; });
 
@@ -529,7 +572,7 @@
     document.getElementById('totalDias').innerText = fechasGrupo.length;
 
     if (nombres.length === 0) {
-      contenedor.innerHTML = `<div style="padding: 22px; text-align: center; color: #64748b; font-size: 13px;">No hay alumnos en <strong>${grupoActual}</strong>.<br>Agrégalos en la pestaña "Registrar Alumnos" o escanea una tarjeta.</div>`;
+      contenedor.innerHTML = `<div style="padding: 22px; text-align: center; color: #64748b; font-size: 13px;">No hay alumnos dados de alta en <strong>${grupoActual}</strong>.<br>Ve a la pestaña "Registrar Alumnos" para cargarlos manualmente.</div>`;
       return;
     }
 
@@ -553,47 +596,75 @@
     }).join('');
   }
 
+  // Alta manual con prevención de duplicados en el mismo grupo o en otro grupo
   function agregarListaMasiva() {
     const texto = document.getElementById('inputListaMasiva').value;
-    const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lineas = texto.split('\n').map(l => quitarAcentos(l)).filter(l => l.length > 0);
     if (lineas.length === 0) {
       alert("Escribe o pega al menos un nombre.");
       return;
     }
-    lineas.forEach(nom => asegurarAlumnoEnGrupo(grupoActual, nom));
+
+    let agregados = 0;
+    let yaEnEsteGrupo = 0;
+    let enOtroGrupo = [];
+
+    lineas.forEach(nom => {
+      // 1. Verificar si ya existe en este mismo grupo
+      if (buscarAlumnoEnGrupo(grupoActual, nom)) {
+        yaEnEsteGrupo++;
+        return;
+      }
+      // 2. Verificar si ya pertenece a otro grupo (ej. 3.-C vs 3.-D)
+      const otro = buscarEnOtrosGrupos(grupoActual, nom);
+      if (otro) {
+        enOtroGrupo.push(`${nom} (ya está en ${otro.grupo})`);
+        return;
+      }
+      // 3. Dar de alta manualmente
+      datosEscolar[grupoActual].alumnos[nom] = {};
+      agregados++;
+    });
+
     guardarDatos();
     document.getElementById('inputListaMasiva').value = '';
     renderizarLista();
-    alert(`Se cargaron ${lineas.length} alumnos en el grupo ${grupoActual}.`);
-    cambiarTab('pase');
+
+    let msg = `✅ Se agregaron ${agregados} alumnos nuevos a ${grupoActual}.`;
+    if (yaEnEsteGrupo > 0) msg += `\nℹ️ ${yaEnEsteGrupo} ya estaban en este grupo (se omitieron).`;
+    if (enOtroGrupo.length > 0) {
+      msg += `\n\n⛔ No se agregaron por pertenecer a otro grupo:\n- ` + enOtroGrupo.join('\n- ');
+    }
+    alert(msg);
   }
 
   async function grabarTarjetaAlumno() {
-    const nombre = document.getElementById('inputNombre').value.trim();
+    const select = document.getElementById('selectAlumnoGrabar');
+    const nombre = select.value;
     const statusReg = document.getElementById('statusRegistro');
+
     if (!nombre) {
-      alert("Escribe primero el nombre del alumno.");
+      alert(`Primero agrega alumnos manualmente al grupo ${grupoActual} en el recuadro de arriba.`);
       return;
     }
-
-    asegurarAlumnoEnGrupo(grupoActual, nombre);
-    guardarDatos();
-    renderizarLista();
 
     const ok = await inicializarHardwareNFC();
     if (!ok) return;
 
     modoGrabacion = true;
     statusReg.style.color = "#1e40af";
-    statusReg.innerHTML = `⏳ Acerca el sticker al teléfono para grabar a <strong>${nombre}</strong>...`;
+    statusReg.innerHTML = `⏳ Acerca el sticker al teléfono para grabar a:<br><strong>${nombre}</strong> (${grupoActual})...`;
 
     try {
       await ndef.write({ records: [{ recordType: "text", data: quitarAcentos(nombre) }] });
       sonarBip(1050, 200);
       if (navigator.vibrate) navigator.vibrate(200);
       statusReg.style.color = "#059669";
-      statusReg.innerHTML = `✅ Sticker grabado y agregado a <strong>${grupoActual}</strong>.`;
-      document.getElementById('inputNombre').value = '';
+      statusReg.innerHTML = `✅ Sticker grabado correctamente para <strong>${nombre}</strong>.`;
+      // Avanza automáticamente al siguiente alumno del menú desplegable para grabar rápido
+      if (select.selectedIndex < select.options.length - 1) {
+        select.selectedIndex++;
+      }
     } catch (e) {
       statusReg.style.color = "#dc2626";
       statusReg.innerHTML = `❌ No se pudo grabar, acerca el sticker de nuevo sin moverlo.`;
@@ -602,8 +673,8 @@
     }
   }
 
+  // Lectura estricta: NUNCA agrega alumnos nuevos al escanear
   function manejarLecturaNFC(event) {
-    // Si estamos grabando un sticker o si el escáner está BLOQUEADO/APAGADO, ignorar lectura
     if (modoGrabacion || !escanerActivo) return;
 
     let nombreLeido = null;
@@ -616,32 +687,58 @@
       }
     }
 
-    const uid = event.serialNumber || 'Sin-ID';
-    const nombreFinal = asegurarAlumnoEnGrupo(grupoActual, nombreLeido || `Tarjeta (${uid})`);
-    asegurarFechaEnGrupo(grupoActual, fechaActual);
-
-    const yaVino = !!datosEscolar[grupoActual].alumnos[nombreFinal][fechaActual];
     const box = document.getElementById('statusBox');
 
-    if (yaVino) {
-      sonarBip(340, 250);
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      box.className = 'box-warn';
-      box.innerHTML = `⚠️ <strong>${nombreFinal}</strong><br><small>Ya tiene Asistencia (A) hoy en ${grupoActual}</small>`;
+    // Candado 1: Tarjeta vacía o sin nombre grabado
+    if (!nombreLeido) {
+      sonarBip(220, 350);
+      if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+      box.className = 'box-error';
+      box.innerHTML = `⛔ <strong>Tarjeta sin alumno asignado</strong><br><small>Este chip está vacío. Grábalo primero en "Registrar Alumnos".</small>`;
       return;
     }
 
-    datosEscolar[grupoActual].alumnos[nombreFinal][fechaActual] = true;
+    // Candado 2: Verificar si el alumno existe en la lista del grupo actual
+    const nombreOficial = buscarAlumnoEnGrupo(grupoActual, nombreLeido);
+
+    if (!nombreOficial) {
+      sonarBip(220, 350);
+      if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+      box.className = 'box-error';
+
+      // Revisar si es alumno de otro salón (ej. es de 3.-C y quieren pasarlo en 3.-D)
+      const otro = buscarEnOtrosGrupos(grupoActual, nombreLeido);
+      if (otro) {
+        box.innerHTML = `⛔ <strong>GRUPO INCORRECTO</strong><br><small><strong>${otro.nombre}</strong> pertenece a <strong>${otro.grupo}</strong>, no a ${grupoActual}.</small>`;
+      } else {
+        box.innerHTML = `⛔ <strong>NO REGISTRADO EN ${grupoActual}</strong><br><small>"${nombreLeido}" no está en la lista. Agrégalo manualmente primero.</small>`;
+      }
+      return;
+    }
+
+    // Candado 3: Evitar doble registro el mismo día
+    asegurarFechaEnGrupo(grupoActual, fechaActual);
+    const yaVino = !!datosEscolar[grupoActual].alumnos[nombreOficial][fechaActual];
+
+    if (yaVino) {
+      sonarBip(380, 250);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      box.className = 'box-warn';
+      box.innerHTML = `⚠️ <strong>${nombreOficial}</strong><br><small>Ya tiene Asistencia (A) registrada hoy en ${grupoActual}</small>`;
+      return;
+    }
+
+    // Todo válido: Marcar asistencia
+    datosEscolar[grupoActual].alumnos[nombreOficial][fechaActual] = true;
     guardarDatos();
     renderizarLista();
 
     sonarBip(950, 140);
     if (navigator.vibrate) navigator.vibrate(150);
     box.className = 'box-ok';
-    box.innerHTML = `✅ <strong>${nombreFinal}</strong><br><small>Asistencia (A) registrada en ${grupoActual}</small>`;
+    box.innerHTML = `✅ <strong>${nombreOficial}</strong><br><small>Asistencia (A) registrada en ${grupoActual}</small>`;
   }
 
-  // Exportar a Excel (.CSV) con "A" y "F" y SIN ACENTOS
   function descargarExcelSinAcentos() {
     const nombres = obtenerNombresOrdenados(grupoActual);
     if (nombres.length === 0) {
@@ -656,9 +753,7 @@
     const fechasOrdenadas = [...datosEscolar[grupoActual].fechas].sort();
     const encabezadosFechas = fechasOrdenadas.map(f => formatearFechaBonita(f)).join(',');
 
-    // Encabezado 100% libre de acentos
     let csv = `No.,Alumno (${grupoActual}),${encabezadosFechas},Total A,Total F\n`;
-
     const alumnosObj = datosEscolar[grupoActual].alumnos;
 
     nombres.forEach((nombre, index) => {
@@ -667,17 +762,11 @@
 
       const celdasDias = fechasOrdenadas.map(fISO => {
         const asistio = !!alumnosObj[nombre][fISO];
-        if (asistio) {
-          totalA++;
-          return 'A';
-        } else {
-          totalF++;
-          return 'F';
-        }
+        if (asistio) { totalA++; return 'A'; }
+        else { totalF++; return 'F'; }
       }).join(',');
 
-      const nombreSinAcentos = quitarAcentos(nombre);
-      csv += `${index + 1},"${nombreSinAcentos}",${celdasDias},${totalA},${totalF}\n`;
+      csv += `${index + 1},"${quitarAcentos(nombre)}",${celdasDias},${totalA},${totalF}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -690,7 +779,6 @@
     document.body.removeChild(a);
   }
 
-  // Exportar como PDF limpio de toda la tabla del grupo
   function exportarReportePDF() {
     const nombres = obtenerNombresOrdenados(grupoActual);
     if (nombres.length === 0) {
@@ -750,7 +838,6 @@
     window.print();
   }
 
-  // Borrado protegido con contraseña (101204)
   function borrarConPassword() {
     const pass = prompt(`🔒 Ingresa el PIN de seguridad para borrar datos de ${grupoActual}:`);
     if (pass === null) return;
@@ -763,8 +850,8 @@
     const opcion = prompt(
       `PIN correcto. ¿Qué deseas borrar del grupo ${grupoActual}?\n\n` +
       `Escribe 1: Borrar SOLO el pase de lista de hoy (${formatearFechaBonita(fechaActual)})\n` +
-      `Escribe 2: Borrar TODAS las fechas (conservando los nombres de los alumnos)\n` +
-      `Escribe 3: Borrar TODO el grupo por completo`
+      `Escribe 2: Borrar TODAS las fechas (conservando la lista de alumnos)\n` +
+      `Escribe 3: Borrar TODO el grupo por completo (incluyendo alumnos)`
     );
 
     if (opcion === "1") {
@@ -791,7 +878,6 @@
     }
   }
 
-  // Inicializar
   document.getElementById('selectorFecha').value = fechaActual;
   seleccionarGrupo('3.-C');
 </script>
