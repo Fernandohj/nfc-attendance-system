@@ -168,7 +168,7 @@
     /* Lista de Alumnos */
     .roster-box {
       text-align: left;
-      max-height: 280px;
+      max-height: 300px;
       overflow-y: auto;
       border: 1px solid #e2e8f0;
       border-radius: 14px;
@@ -197,6 +197,7 @@
       justify-content: center;
       font-weight: 900;
       font-size: 15px;
+      flex-shrink: 0;
     }
     .badge-f {
       background: #fee2e2;
@@ -209,6 +210,7 @@
       justify-content: center;
       font-weight: 900;
       font-size: 15px;
+      flex-shrink: 0;
     }
     .sub-info { font-size: 11px; color: #64748b; margin-top: 2px; }
 
@@ -297,7 +299,7 @@
     <!-- 3. PESTAÑAS -->
     <div class="tabs">
       <button type="button" class="tab-btn active" id="tabBtnPase" onclick="cambiarTab('pase')">Pasar Lista</button>
-      <button type="button" class="tab-btn" id="tabBtnAlumnos" onclick="cambiarTab('alumnos')">Registrar Alumnos</button>
+      <button type="button" class="tab-btn" id="tabBtnAlumnos" onclick="cambiarTab('alumnos')">Registrar / Grabar NFC</button>
     </div>
 
     <!-- SECCIÓN 1: PASE DE LISTA -->
@@ -326,34 +328,34 @@
           📄 Exportar PDF
         </button>
         <button type="button" class="btn-action btn-delete" onclick="borrarConPassword()">
-          🔒 Borrar Datos del Grupo (Requiere PIN)
+          🔒 Borrar / Restaurar Datos (PIN)
         </button>
       </div>
     </div>
 
-    <!-- SECCIÓN 2: ALTA MANUAL Y GRABACIÓN DE TARJETAS -->
+    <!-- SECCIÓN 2: GRABACIÓN DE TARJETAS Y ALTA MANUAL -->
     <div id="alumnos" class="section">
-      <!-- PASO 1: ALTA MANUAL -->
+      <!-- PASO 1: GRABAR CHIP DESDE LA LISTA -->
       <div class="card-box">
-        <h3>1️⃣ Dar de alta alumnos en <span class="lblGrupoDin">3.-C</span> (Manual)</h3>
-        <p>Escribe o pega uno o varios alumnos (uno por renglón). Solo los alumnos en esta lista podrán pasar asistencia en <strong class="lblGrupoDin">3.-C</strong>:</p>
-        <textarea id="inputListaMasiva" rows="4" placeholder="Aguilar Lopez Sofia&#10;Hernandez Perez Mateo&#10;Zuniga Gomez Diego"></textarea>
-        <button type="button" class="scanner-toggle-btn scanner-off" style="padding:11px; font-size:14px; margin:0;" onclick="agregarListaMasiva()">
-          ➕ Agregar Manualmente a <span class="lblGrupoDin">3.-C</span>
-        </button>
-      </div>
-
-      <!-- PASO 2: GRABAR CHIP DESDE LA LISTA -->
-      <div class="card-box" style="margin-bottom:0;">
-        <h3>2️⃣ Grabar Sticker NFC (<span class="lblGrupoDin">3.-C</span>)</h3>
-        <p>Selecciona un alumno ya registrado en <strong class="lblGrupoDin">3.-C</strong> para grabar sus datos en el chip NFC:</p>
+        <h3>1️⃣ Grabar Sticker NFC (<span class="lblGrupoDin">3.-C</span>)</h3>
+        <p>Selecciona al alumno de <strong class="lblGrupoDin">3.-C</strong> y acerca su credencial/sticker para grabarlo:</p>
         <select id="selectAlumnoGrabar">
-          <option value="">-- Primero agrega alumnos arriba --</option>
+          <option value="">-- Cargando alumnos --</option>
         </select>
         <button type="button" class="scanner-toggle-btn" style="background:#2563eb; padding:12px; font-size:14px; margin:0;" onclick="grabarTarjetaAlumno()">
           📲 Grabar Sticker del Alumno Seleccionado
         </button>
         <div id="statusRegistro" style="margin-top: 8px; font-weight: bold; font-size: 13px; text-align:center;"></div>
+      </div>
+
+      <!-- PASO 2: ALTA MANUAL ADICIONAL -->
+      <div class="card-box" style="margin-bottom:0;">
+        <h3>2️⃣ Agregar alumnos adicionales a <span class="lblGrupoDin">3.-C</span></h3>
+        <p>Si llega un alumno nuevo o quieres probar otro grupo, escríbelo aquí (uno por renglón):</p>
+        <textarea id="inputListaMasiva" rows="3" placeholder="Apellido Paterno Materno Nombre"></textarea>
+        <button type="button" class="scanner-toggle-btn scanner-off" style="padding:11px; font-size:14px; margin:0;" onclick="agregarListaMasiva()">
+          ➕ Agregar Manualmente a <span class="lblGrupoDin">3.-C</span>
+        </button>
       </div>
     </div>
   </div>
@@ -365,6 +367,53 @@
 <script>
   const PASSWORD_BORRADO = "101204";
   const GRUPOS = ['3.-C', '3.-D', '3.-E'];
+
+  // =========================================================================
+  // LISTAS OFICIALES PRECARGADAS EN EL CÓDIGO (Se cargan en cualquier celular)
+  // =========================================================================
+  const LISTAS_BASE = {
+    '3.-C': [
+      "Alonso Garcia Ian Tadeo",
+      "Becerril Velazquez Eduardo",
+      "Carrillo Tamayo Zadkiel",
+      "Castillo Vasquez Ian Arturo",
+      "Chan Gonzalez Daniel Maximiliano",
+      "Cruz Cisneros Adrian",
+      "Erazo Torres Alexis Mateo",
+      "Fernandez Jimenez Carolina",
+      "Garcia Reyes Mateo",
+      "Garcia Rivera Alonso",
+      "Gomez Blas Paola Sarahi",
+      "Hernandez Cabello Sarahi",
+      "Hernandez Marcial Naomi Estefania",
+      "Jimenez Ordoñez Eileen Jacqueline",
+      "Magallan Soto Oscar",
+      "Martinez Galindo Katerine",
+      "Martinez Rojas Santiago Malak",
+      "Matlatecatl Diaz Orlando Tonanzi",
+      "Moreno Vazquez Mia Yareli",
+      "Ocampo Camacho Arlette Paola",
+      "Ortiz Bastida Adrian Jesus",
+      "Ortiz Serrano Sofia",
+      "Parra Aguilar Zuri Odette",
+      "Piña Calderon Camila",
+      "Ramirez Teran Luis Ivan",
+      "Rivera Palma Fernando Elian",
+      "Sanchez Cruz Cristian",
+      "Valdez Ortiz Jenifer Sofia",
+      "Vargas Contreras Matias Julian",
+      "Velazquez Peña Maria Jose",
+      "Villalobos Montenegro Kaleb Yariel",
+      "Villanueva Ascencio Santiago"
+    ],
+    '3.-D': [
+      // Aquí pegaremos la lista de 3.-D cuando la tengas lista
+    ],
+    '3.-E': [
+      // Aquí pegaremos la lista de 3.-E cuando la tengas lista
+    ]
+  };
+
   let grupoActual = '3.-C';
   let fechaActual = obtenerFechaLocalISO();
   let escanerActivo = false;
@@ -378,6 +427,22 @@
       '3.-D': { fechas: [], alumnos: {} },
       '3.-E': { fechas: [], alumnos: {} }
     };
+  }
+
+  // Sincroniza las listas base del código sin borrar asistencias ya tomadas
+  function sincronizarListasBase() {
+    GRUPOS.forEach(grupo => {
+      if (!datosEscolar[grupo]) {
+        datosEscolar[grupo] = { fechas: [], alumnos: {} };
+      }
+      const listaOficial = LISTAS_BASE[grupo] || [];
+      listaOficial.forEach(nombreOficial => {
+        const yaExiste = buscarAlumnoEnGrupo(grupo, nombreOficial);
+        if (!yaExiste) {
+          datosEscolar[grupo].alumnos[nombreOficial.trim()] = {};
+        }
+      });
+    });
     guardarDatos();
   }
 
@@ -396,6 +461,7 @@
     return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
   }
 
+  // Limpia acentos y convierte Ñ -> N para que Excel y el chip NFC nunca fallen
   function quitarAcentos(texto) {
     return String(texto)
       .normalize("NFD")
@@ -405,19 +471,16 @@
       .trim();
   }
 
-  // Clave normalizada para comparar nombres sin importar mayúsculas o acentos
   function normalizarClave(texto) {
     return quitarAcentos(texto).toLowerCase().replace(/\s+/g, ' ');
   }
 
-  // Busca si un alumno ya existe en un grupo específico y devuelve su nombre exacto
   function buscarAlumnoEnGrupo(grupo, nombreBuscado) {
     const claveBuscada = normalizarClave(nombreBuscado);
     const nombresGrupo = Object.keys(datosEscolar[grupo]?.alumnos || {});
     return nombresGrupo.find(n => normalizarClave(n) === claveBuscada) || null;
   }
 
-  // Busca si el alumno pertenece a OTRO grupo distinto
   function buscarEnOtrosGrupos(grupoExcluido, nombreBuscado) {
     for (const g of GRUPOS) {
       if (g === grupoExcluido) continue;
@@ -546,7 +609,7 @@
     const select = document.getElementById('selectAlumnoGrabar');
     const valorPrevio = select.value;
     if (nombres.length === 0) {
-      select.innerHTML = `<option value="">-- No hay alumnos en ${grupoActual} (agrégalos arriba) --</option>`;
+      select.innerHTML = `<option value="">-- No hay alumnos en ${grupoActual} --</option>`;
       return;
     }
     select.innerHTML = nombres.map((nom, i) =>
@@ -572,7 +635,7 @@
     document.getElementById('totalDias').innerText = fechasGrupo.length;
 
     if (nombres.length === 0) {
-      contenedor.innerHTML = `<div style="padding: 22px; text-align: center; color: #64748b; font-size: 13px;">No hay alumnos dados de alta en <strong>${grupoActual}</strong>.<br>Ve a la pestaña "Registrar Alumnos" para cargarlos manualmente.</div>`;
+      contenedor.innerHTML = `<div style="padding: 22px; text-align: center; color: #64748b; font-size: 13px;">Aún no está cargada la lista de <strong>${grupoActual}</strong>.<br>Puedes agregarlos en la pestaña "Registrar / Grabar NFC".</div>`;
       return;
     }
 
@@ -584,7 +647,7 @@
 
       return `
         <div class="student-row ${vinoHoy ? 'present' : ''}" onclick="alternarAsistenciaManual('${nombreSeguro}')">
-          <div>
+          <div style="padding-right: 8px;">
             <strong>${idx + 1}. ${nombre}</strong>
             <div class="sub-info">Asistencias: ${totalA} | Faltas: ${totalF}</div>
           </div>
@@ -596,10 +659,9 @@
     }).join('');
   }
 
-  // Alta manual con prevención de duplicados en el mismo grupo o en otro grupo
   function agregarListaMasiva() {
     const texto = document.getElementById('inputListaMasiva').value;
-    const lineas = texto.split('\n').map(l => quitarAcentos(l)).filter(l => l.length > 0);
+    const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     if (lineas.length === 0) {
       alert("Escribe o pega al menos un nombre.");
       return;
@@ -610,18 +672,15 @@
     let enOtroGrupo = [];
 
     lineas.forEach(nom => {
-      // 1. Verificar si ya existe en este mismo grupo
       if (buscarAlumnoEnGrupo(grupoActual, nom)) {
         yaEnEsteGrupo++;
         return;
       }
-      // 2. Verificar si ya pertenece a otro grupo (ej. 3.-C vs 3.-D)
       const otro = buscarEnOtrosGrupos(grupoActual, nom);
       if (otro) {
         enOtroGrupo.push(`${nom} (ya está en ${otro.grupo})`);
         return;
       }
-      // 3. Dar de alta manualmente
       datosEscolar[grupoActual].alumnos[nom] = {};
       agregados++;
     });
@@ -631,7 +690,7 @@
     renderizarLista();
 
     let msg = `✅ Se agregaron ${agregados} alumnos nuevos a ${grupoActual}.`;
-    if (yaEnEsteGrupo > 0) msg += `\nℹ️ ${yaEnEsteGrupo} ya estaban en este grupo (se omitieron).`;
+    if (yaEnEsteGrupo > 0) msg += `\nℹ️ ${yaEnEsteGrupo} ya estaban en este grupo.`;
     if (enOtroGrupo.length > 0) {
       msg += `\n\n⛔ No se agregaron por pertenecer a otro grupo:\n- ` + enOtroGrupo.join('\n- ');
     }
@@ -644,7 +703,7 @@
     const statusReg = document.getElementById('statusRegistro');
 
     if (!nombre) {
-      alert(`Primero agrega alumnos manualmente al grupo ${grupoActual} en el recuadro de arriba.`);
+      alert(`No hay ningún alumno seleccionado en ${grupoActual}.`);
       return;
     }
 
@@ -660,8 +719,7 @@
       sonarBip(1050, 200);
       if (navigator.vibrate) navigator.vibrate(200);
       statusReg.style.color = "#059669";
-      statusReg.innerHTML = `✅ Sticker grabado correctamente para <strong>${nombre}</strong>.`;
-      // Avanza automáticamente al siguiente alumno del menú desplegable para grabar rápido
+      statusReg.innerHTML = `✅ Sticker grabado para <strong>${nombre}</strong>.`;
       if (select.selectedIndex < select.options.length - 1) {
         select.selectedIndex++;
       }
@@ -673,7 +731,6 @@
     }
   }
 
-  // Lectura estricta: NUNCA agrega alumnos nuevos al escanear
   function manejarLecturaNFC(event) {
     if (modoGrabacion || !escanerActivo) return;
 
@@ -689,16 +746,14 @@
 
     const box = document.getElementById('statusBox');
 
-    // Candado 1: Tarjeta vacía o sin nombre grabado
     if (!nombreLeido) {
       sonarBip(220, 350);
       if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
       box.className = 'box-error';
-      box.innerHTML = `⛔ <strong>Tarjeta sin alumno asignado</strong><br><small>Este chip está vacío. Grábalo primero en "Registrar Alumnos".</small>`;
+      box.innerHTML = `⛔ <strong>Tarjeta sin alumno asignado</strong><br><small>Grábala primero en "Registrar / Grabar NFC".</small>`;
       return;
     }
 
-    // Candado 2: Verificar si el alumno existe en la lista del grupo actual
     const nombreOficial = buscarAlumnoEnGrupo(grupoActual, nombreLeido);
 
     if (!nombreOficial) {
@@ -706,17 +761,15 @@
       if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
       box.className = 'box-error';
 
-      // Revisar si es alumno de otro salón (ej. es de 3.-C y quieren pasarlo en 3.-D)
       const otro = buscarEnOtrosGrupos(grupoActual, nombreLeido);
       if (otro) {
         box.innerHTML = `⛔ <strong>GRUPO INCORRECTO</strong><br><small><strong>${otro.nombre}</strong> pertenece a <strong>${otro.grupo}</strong>, no a ${grupoActual}.</small>`;
       } else {
-        box.innerHTML = `⛔ <strong>NO REGISTRADO EN ${grupoActual}</strong><br><small>"${nombreLeido}" no está en la lista. Agrégalo manualmente primero.</small>`;
+        box.innerHTML = `⛔ <strong>NO REGISTRADO EN ${grupoActual}</strong><br><small>"${nombreLeido}" no pertenece a la lista de este salón.</small>`;
       }
       return;
     }
 
-    // Candado 3: Evitar doble registro el mismo día
     asegurarFechaEnGrupo(grupoActual, fechaActual);
     const yaVino = !!datosEscolar[grupoActual].alumnos[nombreOficial][fechaActual];
 
@@ -728,7 +781,6 @@
       return;
     }
 
-    // Todo válido: Marcar asistencia
     datosEscolar[grupoActual].alumnos[nombreOficial][fechaActual] = true;
     guardarDatos();
     renderizarLista();
@@ -839,7 +891,7 @@
   }
 
   function borrarConPassword() {
-    const pass = prompt(`🔒 Ingresa el PIN de seguridad para borrar datos de ${grupoActual}:`);
+    const pass = prompt(`🔒 Ingresa el PIN de seguridad para gestionar datos de ${grupoActual}:`);
     if (pass === null) return;
 
     if (pass !== PASSWORD_BORRADO) {
@@ -848,10 +900,10 @@
     }
 
     const opcion = prompt(
-      `PIN correcto. ¿Qué deseas borrar del grupo ${grupoActual}?\n\n` +
+      `PIN correcto. ¿Qué deseas hacer en el grupo ${grupoActual}?\n\n` +
       `Escribe 1: Borrar SOLO el pase de lista de hoy (${formatearFechaBonita(fechaActual)})\n` +
-      `Escribe 2: Borrar TODAS las fechas (conservando la lista de alumnos)\n` +
-      `Escribe 3: Borrar TODO el grupo por completo (incluyendo alumnos)`
+      `Escribe 2: Borrar TODAS las fechas (conservando los alumnos)\n` +
+      `Escribe 3: Limpiar alumnos de prueba y dejar SOLO la lista oficial del código`
     );
 
     if (opcion === "1") {
@@ -872,12 +924,14 @@
       alert(`✅ Historial de fechas reiniciado en ${grupoActual}.`);
     } else if (opcion === "3") {
       datosEscolar[grupoActual] = { fechas: [], alumnos: {} };
-      guardarDatos();
+      sincronizarListasBase();
       renderizarLista();
-      alert(`✅ Grupo ${grupoActual} eliminado por completo.`);
+      alert(`✅ Grupo ${grupoActual} restaurado con su lista oficial (${Object.keys(datosEscolar[grupoActual].alumnos).length} alumnos).`);
     }
   }
 
+  // Inicializar al abrir la página
+  sincronizarListasBase();
   document.getElementById('selectorFecha').value = fechaActual;
   seleccionarGrupo('3.-C');
 </script>
